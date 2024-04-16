@@ -15,8 +15,8 @@ def switch_to_minigame(name):
     elif result == False:
         pass # minihra nemá wil/fail state (např. automat)
 
-    elif result[0] == 0: # win
+    elif result.did_win == False: # win
         pass # TODO: pro Pavla
     
-    elif result[0] == 1: # fail
+    elif result.did_win == True: # fail
         pass # TODO: pro Pavla
