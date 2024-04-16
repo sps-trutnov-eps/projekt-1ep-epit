@@ -18,7 +18,7 @@ def handle_events() -> bool:
             score += seized_land
     return True
 
-def map_level(screen: pygame.Surface, seized_land: int, score: int) -> int:
+def map_level(screen: pygame.Surface, seized_land: int, score: int) -> None:
     """Level function."""
     clock = pygame.time.Clock()
     sprites = pygame.sprite.Group()
@@ -31,8 +31,6 @@ def map_level(screen: pygame.Surface, seized_land: int, score: int) -> int:
         clock.tick(60)
         print(score)
 
-    return math.floor(seized_land)
-
 def init_game() -> pygame.Surface:
     """Pygame init function."""
     pygame.init()
@@ -44,10 +42,11 @@ def main() -> None:
     """Main function."""
     screen = init_game()
     start_time = pygame.time.get_ticks()
+    pygame.time.set_timer(pygame.USEREVENT, 1000)
     score = 0
     seized_land = 1
 
-    seized_land = map_level(screen, seized_land, score)
+    map_level(screen, seized_land, score)
 
 if __name__ == '__main__':
     main()
