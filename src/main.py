@@ -1,8 +1,8 @@
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 960
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
