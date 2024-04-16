@@ -20,6 +20,8 @@ def test_minigame():
 
         # zavolej tuto funkci každý frame (kvůli ostatním věcem jako multiplayer)
         mini.mini_frame()
+        
+        mini.mini_surface.fill((255, 255, 255))
 
         pygame.draw.rect(mini.mini_surface, (200, 200, 200), (50, 50, 100, 100))
         pygame.display.update()
