@@ -1,28 +1,15 @@
+import math
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
-import random
-from typing import List
 
-SCREEN_WIDTH = 1360
-SCREEN_HEIGHT = 756
-TILE_SIZE = 256
-MAP_SIZE = 15
+SCREEN_WIDTH = 800  # Adjusted screen width
+SCREEN_HEIGHT = 600  # Adjusted screen height
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-class player():
-
-    def _collisions(self, layout, direction):
-        for y, row in enumerate(layout):
-            for x, tile in enumerate(row):
-                if tile == '#':
-                    tile_rect = pg.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                    if self.rect.colliderect(tile_rect):
-                        self._handle_collision(tile_rect, direction)
-        if direction == 1:
-            self.vel.y += self.gravity
-
+CELL_SIZE = 50
+ZOOM_FACTOR = 1.5  # Increase this value for more zoom
 
 def handle_events() -> bool:
     """Events handling function."""
@@ -32,69 +19,37 @@ def handle_events() -> bool:
             return False
     return True
 
-def _handle_collision(self, tile_rect, direction):
-        if direction == 0:
-            if self.rect.right - tile_rect.left < TILE_SIZE // 2:
-                self.rect.right = tile_rect.left
-                self.vel.x = 0
-            elif self.rect.left - tile_rect.right > -TILE_SIZE // 2:
-                self.rect.left = tile_rect.right
-                self.vel.x = 0
-        elif direction == 1:
-            if self.rect.bottom - tile_rect.top < TILE_SIZE // 2:
-                self.rect.bottom = tile_rect.top
-                self.vel.y = 0
-            elif self.rect.top - tile_rect.bottom > -TILE_SIZE // 2:
-                self.rect.top = tile_rect.bottom
-                self.vel.y = 0
-
-def mapa():
-    global layout ,player
-    layout = [['#', "#", '#', '#', '#', '#', '#', '#', '#' '#', '#', "#", ],
-                ['#', " ", "#", ' ', '#', ' ', ' ', ' ', ' ', '#' ' ', '#',],
-                ['#', " ", "#", ' ', '#', ' ', ' ', ' ', ' ', '#' ' ', '#',],
-                ['#', " ", "#", ' ', '#', '#', '#', ' ', '#', '#' ' ', ' ', '#', '#',],
-                ['#', " ", " ", ' ', ' ', ' ', ' ', ' ', ' ', ' ' ' ', ' ', ' ', '#',],
-                ['#', "#", "#", ' ', '#', '#', '#', ' ', '#', '#' '#', '#', ' ', '#',],
-                ['#', " ", " ", ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#' ' ', ' ', '#',],
-                ["#", " ", "#", " ", "#", " ", "#", " ", "#", " ", ' ', '#' ' ', ' ', '#',],
-                ["#", " ", "#", " ", "#", " ", "#", " ", "#", " ", ' ', '#' ' ', ' ', '#',],
-                ["#", "#", "#", "#", "#", "#", "#", " ", "#", "#", '#', '#', '#', '#', '#',]]
-    player = player(TILE_SIZE + TILE_SIZE // 2, 4*TILE_SIZE)
-def draw(screen: pg.Surface, layout: List[List[str]],
-            player, camera_x, camera_y, iterate: bool) -> None:
-    """Draw function."""
-    screen.fill(BLACK)
+def draw_map(screen: pg.Surface, layout: list, view_x: int, view_y: int) -> None:
+    """Draws the map."""
     for y, row in enumerate(layout):
-        if y*TILE_SIZE - camera_y >= 0 or y*TILE_SIZE - camera_y <= SCREEN_WIDTH:
-            for x, tile in enumerate(row):
-                if (tile in ['#', 'E'] and (x*TILE_SIZE - camera_x >= 0 or \
-                    x*TILE_SIZE - camera_x <= SCREEN_HEIGHT)):
-                    tile_rect = pg.Rect((x*TILE_SIZE - camera_x),
-                                            (y*TILE_SIZE - camera_y), TILE_SIZE, TILE_SIZE)
-                    pg.draw.rect(screen, WHITE if tile == '#' else YELLOW, tile_rect)
-    player.draw(screen)
+        for x, cell in enumerate(row):
+            if (x * CELL_SIZE >= view_x and x * CELL_SIZE < view_x + SCREEN_WIDTH // ZOOM_FACTOR and
+                    y * CELL_SIZE >= view_y and y * CELL_SIZE < view_y + SCREEN_HEIGHT // ZOOM_FACTOR):
+                if cell == '#':
+                    color = WHITE
+                else:
+                    color = BLACK
+                pg.draw.rect(screen, color, ((x * CELL_SIZE - view_x) * ZOOM_FACTOR, (y * CELL_SIZE - view_y) * ZOOM_FACTOR, CELL_SIZE * ZOOM_FACTOR, CELL_SIZE * ZOOM_FACTOR))
 
-def update_camera(player, layout: List[List[str]], screen: pg.Surface):
-    """Camera update function."""
-    camera_x = min(max(player.rect.centerx - screen.get_width() // 2, 0),
-                    len(layout[0])*TILE_SIZE - screen.get_width())
-    camera_y = min(max(player.rect.centery - screen.get_height() // 2, 0),
-                    len(layout)*TILE_SIZE - screen.get_height())
-
-    return camera_x, camera_y
-
-def level(screen: pg.Surface) -> None:
+def map_level(screen: pg.Surface, layout: list, score: int, seized_land: int) -> int:
     """Level function."""
     clock = pg.time.Clock()
     sprites = pg.sprite.Group()
 
+    view_x = 0
+    view_y = 0
+
     while handle_events():
+        dt = clock.get_time() / 1000
+        score += seized_land * dt
         sprites.update()
         screen.fill(BLACK)
+        draw_map(screen, layout, view_x, view_y)  # Draw the map
         sprites.draw(screen)
         pg.display.update()
         clock.tick(60)
+
+    return score, math.floor(seized_land)
 
 def init_game() -> pg.Surface:
     """Pygame init function."""
@@ -103,14 +58,26 @@ def init_game() -> pg.Surface:
     pg.display.set_caption('Game')
     return screen
 
-def main(scene_id: int = 0) -> None:
+def main() -> None:
     """Main function."""
     screen = init_game()
-    level(screen)
-    camera_x, camera_y = update_camera(player, layout, screen)
-    draw(screen, layout, player, camera_x, camera_y, False)
+    start_time = pg.time.get_ticks()
+    score = 0
+    seized_land = 0
+
+    layout = [['#', "#", '#', '#', '#', '#', '#', '#', '#', '#', '#', "#", ],
+              ['#', " ", "#", ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', '#',],
+              ['#', " ", "#", ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', '#',],
+              ['#', " ", "#", ' ', '#', '#', '#', ' ', '#', '#', ' ', ' ', '#', '#',],
+              ['#', " ", " ", ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
+              ['#', "#", "#", ' ', '#', '#', '#', ' ', '#', '#', '#', '#', ' ', '#',],
+              ['#', " ", " ", ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', '#',],
+              ["#", " ", "#", " ", "#", " ", "#", " ", "#", " ", ' ', '#', ' ', ' ', '#',],
+              ["#", " ", "#", " ", "#", " ", "#", " ", "#", " ", ' ', '#', ' ', ' ', '#',],
+              ["#", "#", "#", "#", "#", "#", "#", " ", "#", "#", '#', '#', '#', '#', '#',]]
+
+    score, seized_land = map_level(screen, layout, score, seized_land)
 
 if __name__ == '__main__':
     main()
     pg.quit()
-    
