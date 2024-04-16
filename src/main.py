@@ -15,7 +15,7 @@ def handle_events() -> bool:
             return False
     return True
 
-def map_level(screen: pg.Surface, score: int) -> None:
+def map_level(screen: pg.Surface, score: int, seized_land: int) -> int:
     """Level function."""
     clock = pg.time.Clock()
     sprites = pg.sprite.Group()
@@ -28,7 +28,7 @@ def map_level(screen: pg.Surface, score: int) -> None:
         sprites.draw(screen)
         pg.display.update()
         clock.tick(60)
-    
+
     return score
 
 def init_game() -> pg.Surface:
@@ -43,8 +43,9 @@ def main() -> None:
     screen = init_game()
     start_time = pg.time.get_ticks()
     score = 0
+    seized_land = 0
 
-    score = map_level(screen)
+    score = map_level(screen, score, seized_land)
 
 if __name__ == '__main__':
     main()
