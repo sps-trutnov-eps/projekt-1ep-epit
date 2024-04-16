@@ -1,3 +1,4 @@
+import math
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
@@ -29,7 +30,7 @@ def map_level(screen: pg.Surface, score: int, seized_land: int) -> int:
         pg.display.update()
         clock.tick(60)
 
-    return score, int(seized_land)
+    return score, math.floor(seized_land)
 
 def init_game() -> pg.Surface:
     """Pygame init function."""
