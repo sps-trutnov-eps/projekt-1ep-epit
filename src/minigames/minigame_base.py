@@ -1,3 +1,4 @@
+import pygame
 import dataclasses
 
 # funckce pro přepínaní do minigame modu a zpět
@@ -17,3 +18,6 @@ def win_minigame():
 # zavolej tuto funkci každý frame ve tvé minihře
 def mini_frame():
     pass
+
+# pygame surface pro rendering
+mini_surface: pygame.Surface = None
