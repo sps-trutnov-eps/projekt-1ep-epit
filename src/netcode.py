@@ -1,9 +1,12 @@
+import common
 import websockets
 
 import json
 import threading
 
 # == EPIT server/client backend netcode ==
+
+protocol_version = 2
 
 # == client state ==
 
@@ -19,7 +22,7 @@ class ClientState:
     server_conn: webclient.ClientConnection
     player_name: str
 
-client_state: ClientState
+client_state: ClientState | None
 
 # == client implementation ==
 
@@ -29,15 +32,19 @@ client_state: ClientState
 def sync_with_server():
     pass
 
-def connect_as_client(uri: str = "ws://127.0.0.1:15533", player_name: str = "player #1") -> tuple[bool, str | None]:
+def connect_as_client(uri: str, player_name: str) -> tuple[bool, str | None]:
     # setup client state and connection
 
-    global client_state
-    client_state = ClientState(uri, player_name)
+    try:
+        global client_state
+        client_state = ClientState(uri, player_name)
+    except ConnectionError:
+        client_state = None
+        return (False, "Server odmíta připojení.")
 
     # init client with the server
     try:
-        init_packet = ["p_init", player_name]
+        init_packet = ["p_init", player_name, protocol_version]
         client_state.server_conn.send(json.dumps(init_packet))
 
         # await server response
@@ -54,6 +61,12 @@ def connect_as_client(uri: str = "ws://127.0.0.1:15533", player_name: str = "pla
 
             elif response == "s_unexpected_packet":
                 return (False, "Server: Neočekávaná kommunikace???")
+            
+            elif response == "s_version_mismatch":
+                return (False, "Verze Hry Hráče a Serveru se liší.")
+
+            else:
+                raise ValueError("client netcode: unhandled server response type") 
 
     except websockets.InvalidURI:
         return (False, "Adresa URI serveru není správně formátovaná.")
@@ -65,7 +78,9 @@ def connect_as_client(uri: str = "ws://127.0.0.1:15533", player_name: str = "pla
         return (False, "Spojení se serverem přerušeno.")
 
 def disconnect_as_client():
-    global client_state
+    if client_state == None:
+        return
+
     client_state.server_conn.close()
 
 # == server state ==
@@ -114,6 +129,12 @@ def server_connection_handler(websocket: webserver.ServerConnection):
 
     if not init_packet[0] == "p_init":
         websocket.send("s_unexpected_packet")
+        return
+
+    elif not init_packet[2] == protocol_version:
+        websocket.send("s_version_mismatch")
+        return
+
     else: # elif is already player with name
         websocket.send("s_init_success")
     
@@ -173,9 +194,14 @@ def setup_netcode(is_host: bool):
         hosting = True
         start_server()
     
-    print("client: connecting...")
-    connect_as_client()
-    print(f"client: connected as {client_state.player_name}!")
+    print("client: connecting to server...")
+    result = connect_as_client("ws://127.0.0.1:15533", "player #1")
+
+    if result[0]:
+        print(f"client: connected as {client_state.player_name}!")
+    else:
+        print(f"failed to connect: {result[1]}")
+        common.game_quit()
 
 def quit_netcode():
     disconnect_as_client()
