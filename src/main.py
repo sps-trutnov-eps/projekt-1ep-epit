@@ -34,9 +34,10 @@ def init_game() -> pg.Surface:
     pg.display.set_caption('Game')
     return screen
 
-def main(scene_id: int = 0) -> None:
+def main() -> None:
     """Main function."""
     screen = init_game()
+    start_time = pygame.time.get_ticks()
 
     level(screen)
 
