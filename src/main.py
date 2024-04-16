@@ -1,8 +1,8 @@
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
-import minig
 import netcode
+import common
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
@@ -41,14 +41,10 @@ def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
 
-    if False: # if is host
-        # start server thread
-        server_thread = netcode.threading.Thread(target=netcode.start_server())
-        server_thread.start()
-
-    minig.switch_to_minigame("test", screen)
+    netcode.setup_netcode(True)
     level(screen)
 
 if __name__ == '__main__':
     main()
-    pg.quit()
+
+    common.game_quit()

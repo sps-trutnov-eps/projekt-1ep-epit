@@ -1,5 +1,6 @@
 import pygame
 import minigames.minigame_base as mini
+import common
 
 def test_minigame():
     vyhrál = False
@@ -8,7 +9,7 @@ def test_minigame():
         for event in pygame.event.get():
             if (event.type == pygame.QUIT or
                 (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
-                quit()
+                common.game_quit()
 
         # stiskni e abys vyhrál
         if pygame.key.get_pressed()[pygame.K_e]:
