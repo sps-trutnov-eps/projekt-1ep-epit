@@ -38,6 +38,7 @@ def main() -> None:
     """Main function."""
     screen = init_game()
     start_time = pygame.time.get_ticks()
+    score = 0
 
     level(screen)
 
