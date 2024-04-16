@@ -21,6 +21,8 @@ def map_level(screen: pg.Surface, score: int) -> None:
     sprites = pg.sprite.Group()
 
     while handle_events():
+        dt = clock.get_time() / 1000
+        score += seized_land * dt
         sprites.update()
         screen.fill(BLACK)
         sprites.draw(screen)
@@ -42,7 +44,7 @@ def main() -> None:
     start_time = pg.time.get_ticks()
     score = 0
 
-    map_level(screen)
+    score = map_level(screen)
 
 if __name__ == '__main__':
     main()
