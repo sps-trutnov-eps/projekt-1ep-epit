@@ -29,7 +29,7 @@ def map_level(screen: pg.Surface, score: int, seized_land: int) -> int:
         pg.display.update()
         clock.tick(60)
 
-    return score
+    return score, int(seized_land)
 
 def init_game() -> pg.Surface:
     """Pygame init function."""
@@ -45,7 +45,7 @@ def main() -> None:
     score = 0
     seized_land = 0
 
-    score = map_level(screen, score, seized_land)
+    score, seized_land = map_level(screen, score, seized_land)
 
 if __name__ == '__main__':
     main()
