@@ -6,7 +6,7 @@ SCREEN_HEIGHT = 960
 BLACK = (0, 0, 0)
 
 def handle_events(score: int, seized_land: int) -> int:
-    """Events handling function."""
+    """Event function."""
     for event in pygame.event.get():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             return None
@@ -15,6 +15,7 @@ def handle_events(score: int, seized_land: int) -> int:
     return score
 
 def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface) -> None:
+    """Sprite update function."""
     sprites.update()
     screen.fill(BLACK)
     sprites.draw(screen)
@@ -41,7 +42,6 @@ def main() -> None:
     """Main function."""
     screen = init_game()
     pygame.time.set_timer(pygame.USEREVENT, 1000)
-
     map_level(screen)
 
 if __name__ == '__main__':
