@@ -44,10 +44,10 @@ def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
 
-    netcode.setup_netcode(False)
+    netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
     level(screen)
 
 if __name__ == '__main__':
     main()
 
-    exit(0)
+    exit(0) # use atexit for cleaning up

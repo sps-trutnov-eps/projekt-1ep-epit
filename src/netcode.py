@@ -1,25 +1,18 @@
 import atexit
 
-from os import read
 import socket
 import socketserver
 
 import select
 import json
-from sys import platform
 import threading
-
-from pygame.color import THECOLORS
 
 # == EPIT server/client backend netcode ==
 
 protocol_version = 5
-
 packet_len_bytes = 2
 
 # == client state ==
-
-# import websockets.sync.client as webclient
 
 class ClientState:
     __slots__ = ["server_conn", "player_name"]
@@ -144,9 +137,6 @@ def connect_as_client(uri: tuple, player_name: str) -> tuple[bool, str | None]:
             else:
                 raise ValueError("client netcode: unhandled server response type") 
 
-    #except websockets.InvalidURI:
-    #    return (False, "Adresa URI serveru není správně formátovaná.")
-
     except TimeoutError:
         return (False, "Timeout při připojování k serveru.")
 
@@ -265,7 +255,6 @@ def start_server():
 # stops the server, game might refuse to exit if hosting and not terminating the server
 def terminate_server():
     global server_state
-    # server_state.server_lock.acquire()
 
     print("server: waiting for server to terminate...")
 
@@ -276,7 +265,7 @@ def terminate_server():
 
 hosting: bool = False
 
-def setup_netcode(is_host: bool):
+def setup_netcode(addr, player_name: str, is_host: bool = False):
     global hosting
     
     if is_host:
@@ -284,7 +273,7 @@ def setup_netcode(is_host: bool):
         start_server()
     
     print("client: connecting to server...")
-    result = connect_as_client(("127.0.0.1", 15533), "player #1")
+    result = connect_as_client(addr, player_name)
 
     if result[0]:
         print(f"client: connected as {client_state.player_name}!")
