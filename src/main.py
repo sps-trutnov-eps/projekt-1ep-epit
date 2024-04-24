@@ -24,7 +24,10 @@ def level(screen: pg.Surface) -> None:
     sprites = pg.sprite.Group()
 
     while handle_events():
+        netcode.client_sync()
+
         sprites.update()
+
         screen.fill(BLACK)
         sprites.draw(screen)
         pg.display.update()
@@ -41,10 +44,10 @@ def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
 
-    netcode.setup_netcode(True)
+    netcode.setup_netcode(False)
     level(screen)
 
 if __name__ == '__main__':
     main()
 
-    common.game_quit()
+    exit(0)

@@ -1,14 +1,21 @@
-import common
+import atexit
 
+from os import read
 import socket
 import socketserver
 
+import select
 import json
+from sys import platform
 import threading
+
+from pygame.color import THECOLORS
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 4
+protocol_version = 5
+
+packet_len_bytes = 2
 
 # == client state ==
 
@@ -19,42 +26,90 @@ class ClientState:
 
     def __init__(self, uri, player_name) -> None:
         self.server_conn = socket.create_connection(uri)
+
         self.player_name = player_name
 
     server_conn: socket.socket
+    client_thread: threading.Thread
+
     player_name: str
 
-client_state: ClientState | None
+client_state: ClientState | None = None
 
 # == client implementation ==
+
+def send_packet(sock: socket.socket, obj):
+    packet_data: bytes = bytes(json.dumps(obj), 'utf-8')
+    packet_len: int = len(packet_data)
+
+    sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+
+def read_packet(sock: socket.socket) -> list:
+    # read packet size header
+    msg_len = sock.recv(packet_len_bytes)
+
+    if not msg_len:
+        raise ConnectionError
+
+    # parse packet header
+    msg_len = int.from_bytes(msg_len, "big", signed=False)
+
+    message = ''
+    len_read = 0
+
+    while len_read < msg_len:
+        message = sock.recv(min(msg_len, 4096))
+
+        if not message:
+            raise ConnectionError
+
+        len_read += len(message)
+
+    return json.loads(message) 
 
 # TODO: player continuos updates (score, player world position)
 # TODO: player events (eg. game ended) <- must be able to affect minigames
 
-def sync_with_server() -> tuple[bool, str | None]:
-    # accept server messages
+# called once per client frame to sync with server
+def client_sync() -> tuple[bool, str | None]:
+    # parse server packets (if any)
 
-    try:
-        message = str(client_state.server_conn.recv(0), 'utf-8')
+    packets = []
 
-        if message == '':
-            raise ConnectionError
-        
-    except TimeoutError:
-        return (True, None) # no server packets
-    except ConnectionError:
-        return (False, "Stráta spojení se serverem.")
+    while True:
+        read_sockets, _, _ = select.select((client_state.server_conn,), tuple(), tuple(), 0)
 
-    packet = json.dumps(message)
+        if len(read_sockets) == 0:
+            break
 
-    if packet[0] == "s_game_tick":
-        pass
-    elif packet[0] == "s_game_event":
-        pass # game start
+        for sock in read_sockets:
+            # receive and parse packets from tcp stream
 
+            try:
+                packets.append(read_packet(sock))
+
+            except TimeoutError:
+                return (True, None) # no server packets
+            except ConnectionError:
+                return (False, "Stráta spojení se serverem.")
+
+    # process received packets
+
+    for packet in packets:
+        if packet[0] == "s_game_tick":
+            pass
+        elif packet[0] == "s_game_event":
+            pass # game start
+        elif packet[0] == "pong":
+            print(packet)
+
+    # handle/queue game state changes
+
+    send_packet(client_state.server_conn, ("ping",threading.current_thread().getName()))
+    
     return (True, None)
 
-def connect_as_client(uri: str, player_name: str) -> tuple[bool, str | None]:
+def connect_as_client(uri: tuple, player_name: str) -> tuple[bool, str | None]:
     # setup client state and connection
 
     try:
@@ -66,11 +121,10 @@ def connect_as_client(uri: str, player_name: str) -> tuple[bool, str | None]:
 
     # init client with the server
     try:
-        init_packet = ["p_init", player_name, protocol_version]
-        client_state.server_conn.sendall(bytes(json.dumps(init_packet), 'utf-8'))
+        send_packet(client_state.server_conn, ("p_init", player_name, protocol_version))
 
         # await server response
-        response = str(client_state.server_conn.recv(1024), 'utf-8')
+        response = read_packet(client_state.server_conn)[0]
 
         if response == "s_init_success":
             return (True, None)
@@ -113,8 +167,9 @@ class ServerState:
     def __init__(self) -> None:
         # init the server infrastructure
         
-        self.server = socketserver.ThreadingTCPServer(('127.0.0.1', 15533), ServerClientConnectionHandler)
+        self.server = socketserver.ThreadingTCPServer(('', 15533), ServerClientConnectionHandler)
         self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.daemon = True
 
         # the server should be under a lock but i don't care for a 5 milisecond race condition
         # assert self.server_lock.acquire(False)
@@ -143,35 +198,31 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         # new client connected, await clients "init" message
 
         try:
-            message = self.request.recv(1024)
+            init_packet = read_packet(self.request)
         except:
-            print("new client<->server connection failed while initing client")
+            print("server: new client<->server connection failed while initing client")
             raise
-
-        # TODO: register new player, add to lobby
-
-        init_packet = json.loads(message)
 
         if not init_packet[0] == "p_init":
             print("server: refused new connection due to protocol error!")
 
-            self.request.sendall(bytes("s_unexpected_packet", 'utf-8'))
+            send_packet(self.request, ("s_unexpected_packet",))
             return
 
         elif not init_packet[2] == protocol_version:
             print("server: refused new connection due to version mismatch!")
 
-            self.request.sendall(bytes("s_version_mismatch", 'utf-8'))
+            send_packet(self.request, ("s_version_mismatch",))
             return
 
         elif init_packet[1] in server_state.lobby:
             print("server: refused new connection due to name being taken!")
 
-            self.request.sendall(bytes("s_init_name_taken", 'utf-8'))
+            send_packet(self.request, ("s_init_name_taken",))
             return
 
         else: # elif is already player with name
-            self.request.sendall(bytes("s_init_success", 'utf-8'))
+            send_packet(self.request, ("s_init_success",))
         
         player = init_packet[1]
         server_state.lobby.append(player)
@@ -182,10 +233,13 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         while True:
             try:
                 # await client packet
-                message = str(self.request.recv(1024), 'utf-8')
+                packet = read_packet(self.request)
 
-                if message == '': # 
-                    raise ConnectionError
+                # process client packet
+
+                if packet[0] == "ping":
+                    print(packet)
+                    send_packet(self.request, ("pong",*packet))
 
             except ConnectionError:
                 server_handle_disconnect(player)
@@ -236,8 +290,10 @@ def setup_netcode(is_host: bool):
         print(f"client: connected as {client_state.player_name}!")
     else:
         print(f"failed to connect: {result[1]}")
-        common.game_quit()
+        exit(-1)
 
+# handles netcode clean up at exit
+@atexit.register
 def quit_netcode():
     disconnect_as_client()
 
@@ -246,10 +302,11 @@ def quit_netcode():
 
 # `python netcode.py` to start a dedicated server
 if __name__ == '__main__':
+    hosting = True
     start_server()
 
     try:
         while True:
             pass
     except KeyboardInterrupt:
-        terminate_server()
+        exit(0)
