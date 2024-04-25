@@ -8,6 +8,8 @@ import pygame
 
 # == ui ==
 
+freetype.init()
+
 # sdílený font pro celý project, prostě jen `game_font.render_to(sur, (x, y), "text", color)` tam kdeho chcete použít
 # note: Kdyby někdo našel lepší font, než je ten defaultní, klidně ho mužeme změnit
 game_font = freetype.SysFont(freetype.get_default_font(), 16)
