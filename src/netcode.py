@@ -9,25 +9,26 @@ import threading
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 5
+protocol_version = 6
 packet_len_bytes = 2
 
 # == client state ==
 
 class ClientState:
-    __slots__ = ["server_conn", "player_name"]
+    __slots__ = ["server_conn", "player_name", "remote_player_states"]
 
     def __init__(self, uri, player_name) -> None:
         self.server_conn = socket.create_connection(uri)
 
         self.player_name = player_name
+        self.remote_player_states = []
 
     server_conn: socket.socket
     client_thread: threading.Thread
 
     player_name: str
 
-client_state: ClientState | None = None
+client_state: ClientState
 
 # == client implementation ==
 
@@ -64,7 +65,7 @@ def read_packet(sock: socket.socket) -> list:
 # TODO: player events (eg. game ended) <- must be able to affect minigames
 
 # called once per client frame to sync with server
-def client_sync() -> tuple[bool, str | None]:
+def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None]:
     # parse server packets (if any)
 
     packets = []
@@ -88,19 +89,59 @@ def client_sync() -> tuple[bool, str | None]:
 
     # process received packets
 
+    lock_response = None
+
     for packet in packets:
         if packet[0] == "s_game_tick":
+            # client_state.remote_player_states = packet[1]
             pass
+
         elif packet[0] == "s_game_event":
-            pass # game start
+            event_type = packet[1]
+
+            # lobby events
+            if event_type == "game_start":
+                pass
+            elif event_type == "game_end":
+                pass
+
+            elif event_type == "score_update":
+                pass
+        
+        elif packet[0] == "lock_response":
+            if not watch_for_lock_response:
+                raise ValueError("recieved lock response while not waiting for it!")
+            
+            else:
+                lock_response = packet[1]
+            
         elif packet[0] == "pong":
             print(packet)
 
     # handle/queue game state changes
 
-    send_packet(client_state.server_conn, ("ping",threading.current_thread().getName()))
+    # send_packet(client_state.server_conn, ("ping", threading.current_thread().getName()))
     
+    if not lock_response == None:
+        return (lock_response, "lr")
+
     return (True, None)
+
+# locks a server-side lock, returns True if locked (and the lock was free) or False if the lock was already locked
+# remember to `remote_unlock` after the lock is not needed, otherwise the lock will be locked forever
+# note: this def is fully synchronous and *very* slow, never do it in every frame
+def remote_try_lock(lock_name: str) -> bool:
+    send_packet(client_state.server_conn, ("lock_acquire", lock_name))
+
+    while True:
+        res = client_sync(True)
+
+        if res[1] == "lr":
+            return res[0]
+
+# unlocks the lock so other clients can lock the lock
+def remote_unlock(lock_name: str):
+    send_packet(client_state.server_conn, ("lock_release", lock_name))
 
 def connect_as_client(uri: tuple, player_name: str) -> tuple[bool, str | None]:
     # setup client state and connection
@@ -109,7 +150,6 @@ def connect_as_client(uri: tuple, player_name: str) -> tuple[bool, str | None]:
         global client_state
         client_state = ClientState(uri, player_name)
     except ConnectionError:
-        client_state = None
         return (False, "Server odmíta připojení.")
 
     # init client with the server
@@ -144,15 +184,15 @@ def connect_as_client(uri: tuple, player_name: str) -> tuple[bool, str | None]:
         return (False, "Spojení se serverem přerušeno.")
 
 def disconnect_as_client():
-    if client_state == None:
-        return
-
-    client_state.server_conn.close()
+    try:
+        client_state.server_conn.close()
+    except:
+        pass # don't look here
 
 # == server state ==
 
 class ServerState:
-    __slots__ = ["server_thread", "server", "lobby"]
+    __slots__ = ["server_thread", "server", "lobby", "remote_locks"]
 
     def __init__(self) -> None:
         # init the server infrastructure
@@ -160,6 +200,8 @@ class ServerState:
         self.server = socketserver.ThreadingTCPServer(('', 15533), ServerClientConnectionHandler)
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
+
+        self.remote_locks = {}
 
         # the server should be under a lock but i don't care for a 5 milisecond race condition
         # assert self.server_lock.acquire(False)
@@ -169,6 +211,8 @@ class ServerState:
     # TODO: replace with dedicated-server subprocess
     server_thread: threading.Thread
     server: socketserver.ThreadingTCPServer
+
+    remote_locks: dict[str, threading.Lock]
     
     lobby: list
 
@@ -227,8 +271,23 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
                 # process client packet
 
-                if packet[0] == "ping":
-                    print(packet)
+                if packet[0] == "lock_acquire":
+                    lock = server_state.remote_locks.get(packet[1])
+
+                    if lock == None:
+                        # create new lock
+
+                        lock = threading.Lock()
+                        server_state.remote_locks[packet[1]] = lock
+
+                    did_acquire = lock.acquire(False)
+
+                    send_packet(self.request, ("lock_response", did_acquire))
+                
+                elif packet[0] == "lock_release":
+                    server_state.remote_locks[packet[1]].release()
+
+                elif packet[0] == "ping":
                     send_packet(self.request, ("pong",*packet))
 
             except ConnectionError:
