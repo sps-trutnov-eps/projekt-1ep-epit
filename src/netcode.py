@@ -129,7 +129,7 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
 
 # locks a server-side lock, returns True if locked (and the lock was free) or False if the lock was already locked
 # remember to `remote_unlock` after the lock is not needed, otherwise the lock will be locked forever
-# note: this def is fully synchronous and *very* slow, never do it in every frame
+# note: this def is fully synchronous and *very* slow, never do it in every frame (only loading screens and such)
 def remote_try_lock(lock_name: str) -> bool:
     send_packet(client_state.server_conn, ("lock_acquire", lock_name))
 
