@@ -1,28 +1,60 @@
 import pygame
-import minigames.minigame_base as mini
+import sys  # Add this import statement
 
-def test_minigame():
-    vyhrál = False
+# Initialize pygame
+pygame.init()
 
-    while True:
-        for event in pygame.event.get():
-            if (event.type == pygame.QUIT or
-                (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
-                quit()
+# Get the screen size
+screen_info = pygame.display.Info()
+screen_width = screen_info.current_w
+screen_height = screen_info.current_h
 
-        # stiskni e abys vyhrál
-        if pygame.key.get_pressed()[pygame.K_e]:
-            return mini.fail_minigame()
-        
-        # stiskni q abys prohrál
-        elif pygame.key.get_pressed()[pygame.K_q]:
-            return mini.win_minigame()
+# Set up the display in fullscreen mode
+window = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
+pygame.display.set_caption("Ready?")
 
-        # zavolej tuto funkci každý frame (kvůli ostatním věcem jako multiplayer)
-        
-        mini.mini_frame()
-        
-        mini.mini_surface.fill((255, 255, 255))
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
 
-        pygame.draw.rect(mini.mini_surface, (200, 200, 200), (50, 50, 100, 100))
-        pygame.display.update()
+# Main loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left mouse button
+                # Check if the mouse click is inside the button rectangle
+                if button_rect.collidepoint(event.pos):
+                    # Move to the next stage or perform any action
+                    print("Start the game!")
+                    # Add code to proceed to the next stage or perform any action here
+                    pygame.quit()
+                    sys.exit()
+
+    # Clear the screen
+    window.fill(WHITE)
+
+    # Draw "READY?" text
+    font = pygame.font.SysFont(None, 64)
+    ready_text = font.render("READY?", True, BLACK)
+    ready_text_rect = ready_text.get_rect(center=(screen_width // 2, screen_height // 2 - 100))
+    window.blit(ready_text, ready_text_rect)
+
+    # Draw rectangle as button with text "Start the game"
+    button_width = 200
+    button_height = 50
+    button_x = (screen_width - button_width) // 2
+    button_y = (screen_height - button_height) // 2 + 100
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+    pygame.draw.rect(window, GRAY, button_rect)
+    
+    # Draw text inside the button
+    button_font = pygame.font.SysFont(None, 36)
+    button_text = button_font.render("Start the game", True, BLACK)
+    button_text_rect = button_text.get_rect(center=button_rect.center)
+    window.blit(button_text, button_text_rect)
+
+    pygame.display.flip()
