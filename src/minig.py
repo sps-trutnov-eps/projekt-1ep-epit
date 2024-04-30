@@ -23,7 +23,7 @@ def switch_to_minigame(name, sur: pygame.Surface):
     if result == None:
         raise ValueError(f"minigame {name} nevrátil jestli vyhrál/prohrál (`return False` pokud nejde vyhrát ani prohrát, např. automat)")
     elif result == False:
-        pass # minihra nemá wil/fail state (např. automat)
+        return None
 
     elif result.did_win == False: # win
         pass # TODO: pro Pavla
