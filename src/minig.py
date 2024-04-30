@@ -1,10 +1,12 @@
 import pygame
 import minigames.minigame_base as mini
 import minigames.test as mini_test
+import minigames.simonsays
 
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
+    "simonsays"
 }
 
 def switch_to_minigame(name, sur: pygame.Surface):
