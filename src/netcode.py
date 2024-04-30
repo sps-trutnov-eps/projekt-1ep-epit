@@ -6,10 +6,11 @@ import socketserver
 import select
 import json
 import threading
+import subprocess
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 6
+protocol_version = 7
 packet_len_bytes = 2
 
 # == client state ==
@@ -108,7 +109,7 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
             elif event_type == "score_update":
                 pass
         
-        elif packet[0] == "lock_response":
+        elif packet[0] == "s_lock_response":
             if not watch_for_lock_response:
                 raise ValueError("recieved lock response while not waiting for it!")
             
@@ -192,14 +193,17 @@ def disconnect_as_client():
 # == server state ==
 
 class ServerState:
-    __slots__ = ["server_thread", "server", "lobby", "remote_locks"]
+    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down"]
 
     def __init__(self) -> None:
         # init the server infrastructure
         
         self.server = socketserver.ThreadingTCPServer(('', 15533), ServerClientConnectionHandler)
-        self.server_thread = threading.Thread(target=self.server.serve_forever)
-        self.server_thread.daemon = True
+        # self.server_thread = threading.Thread(target=self.server.serve_forever)
+        # self.server_thread.daemon = True
+
+        # self.server_tick_thread = threading.Thread(target=)
+        # self.server_tick_thread.daemon = True
 
         self.remote_locks = {}
 
@@ -207,16 +211,21 @@ class ServerState:
         # assert self.server_lock.acquire(False)
 
         self.lobby = []
+        self.player_info = {}
 
     # TODO: replace with dedicated-server subprocess
-    server_thread: threading.Thread
+    # server_thread: threading.Thread
+    server_tick_thread: threading.Thread
+
     server: socketserver.ThreadingTCPServer
 
     remote_locks: dict[str, threading.Lock]
     
     lobby: list
+    player_info: dict
 
 server_state: ServerState
+server_process: subprocess.Popen # only used when running internal server
 
 # == server implementation ==
 
@@ -266,6 +275,10 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         # start client io loop
         while True:
             try:
+                if server_state.is_shuting_down:
+                    send_packet(self.request, ("s_server_quit",))
+                    return
+
                 # await client packet
                 packet = read_packet(self.request)
 
@@ -282,10 +295,15 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
                     did_acquire = lock.acquire(False)
 
-                    send_packet(self.request, ("lock_response", did_acquire))
+                    send_packet(self.request, ("s_lock_response", did_acquire))
                 
                 elif packet[0] == "lock_release":
                     server_state.remote_locks[packet[1]].release()
+
+                elif packet[0] == "host_game_start":
+                    server_state.server_tick_thread.start()
+
+                # TODO: server quit handling
 
                 elif packet[0] == "ping":
                     send_packet(self.request, ("pong",*packet))
@@ -293,10 +311,19 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
             except ConnectionError:
                 server_handle_disconnect(player)
                 return
+            
+            # send server tick to client
 
-            # TODO:
-            # - player move event
-            # - score change
+            game_tick = ("s_game_tick", {}, {})
+
+            # player updates (position, held item, etc.)
+
+            for p in server_state.player_info:
+                game_tick[1][p.name] = (p.pos, p.delayed_pos, p.held_item, p.health)
+            
+            # game score
+
+            game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
 
 # starts the server python thread in the backgound
 def start_server():
@@ -309,7 +336,10 @@ def start_server():
     
     print(f"\nstarting EPIT dedicated server... (protocol version {protocol_version})\n")
 
-    server_state.server_thread.start()
+    try:
+        server_state.server.serve_forever()
+    except KeyboardInterrupt:
+        exit(0)
 
 # stops the server, game might refuse to exit if hosting and not terminating the server
 def terminate_server():
@@ -318,7 +348,7 @@ def terminate_server():
     print("server: waiting for server to terminate...")
 
     server_state.server.shutdown()
-    server_state.server_thread.join()
+    # server_state.server_thread.join()
 
 # == netcode api ==
 
@@ -326,10 +356,12 @@ hosting: bool = False
 
 def setup_netcode(addr, player_name: str, is_host: bool = False):
     global hosting
+    global server_process
     
     if is_host:
         hosting = True
-        start_server()
+
+        server_process = subprocess.Popen(("python", "./src/netcode.py"))
     
     print("client: connecting to server...")
     result = connect_as_client(addr, player_name)
@@ -343,18 +375,25 @@ def setup_netcode(addr, player_name: str, is_host: bool = False):
 # handles netcode clean up at exit
 @atexit.register
 def quit_netcode():
+    if hosting:
+        send_packet(client_state.server_conn, ("host_server_quit",))
+
     disconnect_as_client()
 
     if hosting:
-        terminate_server()
+        server_process.communicate()
 
 # `python netcode.py` to start a dedicated server
 if __name__ == '__main__':
-    hosting = True
+    atexit.register(terminate_server)
     start_server()
 
     try:
         while True:
             pass
     except KeyboardInterrupt:
-        exit(0)
+        pass
+    
+    print("exit")
+
+    exit(0)

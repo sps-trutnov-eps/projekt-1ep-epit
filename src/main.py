@@ -44,7 +44,7 @@ def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
 
-    netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
+    netcode.setup_netcode(("127.0.0.1", 15533), "player #1", True)
     level(screen)
 
 if __name__ == '__main__':
