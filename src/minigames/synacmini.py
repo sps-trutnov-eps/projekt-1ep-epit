@@ -1,5 +1,5 @@
 import pygame
-import sys  # Add this import statement
+import sys
 
 # Initialize pygame
 pygame.init()
@@ -18,43 +18,51 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
 
+# Flag to track if the game is ready to start
+game_ready = False
+
 # Main loop
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        elif event.type == pygame.MOUSEBUTTONDOWN and not game_ready:
             if event.button == 1:  # Left mouse button
                 # Check if the mouse click is inside the button rectangle
                 if button_rect.collidepoint(event.pos):
-                    # Move to the next stage or perform any action
-                    print("Start the game!")
-                    # Add code to proceed to the next stage or perform any action here
-                    pygame.quit()
-                    sys.exit()
+                    # Mark the game as ready to start
+                    game_ready = True
 
     # Clear the screen
     window.fill(WHITE)
 
-    # Draw "READY?" text
-    font = pygame.font.SysFont(None, 64)
-    ready_text = font.render("READY?", True, BLACK)
-    ready_text_rect = ready_text.get_rect(center=(screen_width // 2, screen_height // 2 - 100))
-    window.blit(ready_text, ready_text_rect)
+    if not game_ready:
+        # Draw "READY?" text
+        font = pygame.font.SysFont(None, 64)
+        ready_text = font.render("READY?", True, BLACK)
+        ready_text_rect = ready_text.get_rect(center=(screen_width // 2, screen_height // 2 - 100))
+        window.blit(ready_text, ready_text_rect)
 
-    # Draw rectangle as button with text "Start the game"
-    button_width = 200
-    button_height = 50
-    button_x = (screen_width - button_width) // 2
-    button_y = (screen_height - button_height) // 2 + 100
-    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-    pygame.draw.rect(window, GRAY, button_rect)
-    
-    # Draw text inside the button
-    button_font = pygame.font.SysFont(None, 36)
-    button_text = button_font.render("Start the game", True, BLACK)
-    button_text_rect = button_text.get_rect(center=button_rect.center)
-    window.blit(button_text, button_text_rect)
+        # Draw rectangle as button with text "Start the game"
+        button_width = 200
+        button_height = 50
+        button_x = (screen_width - button_width) // 2
+        button_y = (screen_height - button_height) // 2 + 100
+        button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+        pygame.draw.rect(window, GRAY, button_rect)
+        
+        # Draw text inside the button
+        button_font = pygame.font.SysFont(None, 36)
+        button_text = button_font.render("Start the game", True, BLACK)
+        button_text_rect = button_text.get_rect(center=button_rect.center)
+        window.blit(button_text, button_text_rect)
+    else:
+        # Draw white screen for the next stage
+        window.fill(WHITE)
 
     pygame.display.flip()
+
+# Quit pygame
+pygame.quit()
+sys.exit()
