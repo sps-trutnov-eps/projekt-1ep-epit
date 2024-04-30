@@ -8,15 +8,15 @@ minigame_lib = {
     "piano": piano.piano,
 }
 
-def switch_to_minigame(name, sur: pygame.Surface):
+def switch_to_minigame(name, screen: pygame.Surface):
     # minigame setup
 
-    mini.mini_surface = sur
+    mini.mini_surface = screen
     mini_loop = minigame_lib[name]
 
     # run minigame
 
-    result = mini_loop()
+    result = mini_loop(screen)
 
     # check result
 

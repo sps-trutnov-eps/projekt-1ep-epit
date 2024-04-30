@@ -1,9 +1,8 @@
 import sys
 import random
 import pygame
-pygame.init()
 
-def piano():
+def piano(screen: pygame.Surface):
     barva=(255,0,0)
     timer=0
     score=0
@@ -13,7 +12,6 @@ def piano():
     ctverec_y=200
     rychlost=0.5
     pozice_padu=0
-    okno = pygame.display.set_mode(rozliseni_okna)
     font=pygame.font.Font(None, 128)
     text1=font.render("H", True, (0, 0, 0))
     text2=font.render("J", True, (0, 0, 0))
@@ -49,18 +47,18 @@ def piano():
                 
         if timer!=0:
             timer-=1
-        okno.fill((255, 255, 255))
+        screen.fill((255, 255, 255))
         if timer==0:
             barva=(255,0,0)
         if score>10 and vyhra==0:
             vyhra=1
             #výhra
-            print("ýhra")
-        pygame.draw.rect(okno,barva, (0, rozliseni_okna[1]-100, rozliseni_okna[0],100))
-        pygame.draw.rect(okno, (0, 0, 0), (ctverec_x, ctverec_y, 100, 100))
-        okno.blit(text1, (415, rozliseni_okna[1]-100))
-        okno.blit(text2, (515, rozliseni_okna[1]-100))
-        okno.blit(text3, (615, rozliseni_okna[1]-100))
-        okno.blit(text4, (715, rozliseni_okna[1]-100))
-        okno.blit(text5, (rozliseni_okna[0]/2-40, 100))
+            print("výhra")
+        pygame.draw.rect(screen,barva, (0, rozliseni_okna[1]-100, rozliseni_okna[0],100))
+        pygame.draw.rect(screen, (0, 0, 0), (ctverec_x, ctverec_y, 100, 100))
+        screen.blit(text1, (415, rozliseni_okna[1]-100))
+        screen.blit(text2, (515, rozliseni_okna[1]-100))
+        screen.blit(text3, (615, rozliseni_okna[1]-100))
+        screen.blit(text4, (715, rozliseni_okna[1]-100))
+        screen.blit(text5, (rozliseni_okna[0]/2-40, 100))
         pygame.display.update()
