@@ -28,6 +28,7 @@ def map_level(screen: pygame.Surface, score: int = 0, land: int = 1) -> None:
     while True:
         switch_to_minigame("test", screen)
         update_sprites(sprites, screen)
+        netcode.client_sync()
         clock.tick(60)
 
 def init_game() -> pygame.Surface:
@@ -42,7 +43,10 @@ def main() -> None:
     screen = init_game()
     map_level(screen)
 
+    netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
 if __name__ == '__main__':
     thread = threading.Thread(target=handle_events)
     thread.start()
     main()
+
+    exit(0) # use atexit for cleaning up

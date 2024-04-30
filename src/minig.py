@@ -16,7 +16,13 @@ def switch_to_minigame(name, sur: pygame.Surface):
 
     # run minigame
 
-    result = mini_loop()
+    try:
+        result = mini_loop()
+    except mini.MinigameInterupt as e:
+        # if e.reason == "game_ended":
+        #     return_to_lobby()
+
+        result = None
 
     # check result
 

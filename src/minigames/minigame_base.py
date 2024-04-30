@@ -1,11 +1,16 @@
 import pygame
 import dataclasses
 
+import netcode
+
 # funckce pro přepínaní do minigame modu a zpět
 
 @dataclasses.dataclass()
 class MinigameEndState:
     did_win: bool
+
+class MinigameInterupt(BaseException):
+    reason: str
 
 # prohrál minihru, zavolej `return fail_minigame()` aby ses vrátil do hry
 def fail_minigame():
@@ -17,7 +22,10 @@ def win_minigame():
 
 # zavolej tuto funkci každý frame ve tvé minihře
 def mini_frame():
-    pass
+    netcode.client_sync()
+    
+    # if game_ended:
+    #     raise MinigameInterupt
 
 # pygame surface pro rendering
 mini_surface: pygame.Surface = None
