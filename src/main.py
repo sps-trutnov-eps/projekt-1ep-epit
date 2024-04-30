@@ -1,8 +1,7 @@
 import pygame
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 960
+SCREEN_RESOLUTION = (1280, 960)
 BLACK = (0, 0, 0)
 
 def handle_events(score: int, seized_land: int) -> int:
@@ -34,7 +33,7 @@ def map_level(screen: pygame.Surface, seized_land: int = 0, score: int = 0) -> N
 def init_game() -> pygame.Surface:
     """Pygame init function."""
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode(SCREEN_RESOLUTION)
     pygame.display.set_caption('EPIT')
     return screen
 
