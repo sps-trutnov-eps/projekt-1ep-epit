@@ -1,45 +1,50 @@
-import pygame as pg
+import pygame
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-
-WHITE = (255, 255, 255)
+SCREEN_RESOLUTION = (1280, 960)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+def handle_events(score: int, seized_land: int) -> int:
+    """Event function."""
+    for event in pygame.event.get():
+        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+            return None
+        if event.type == pygame.USEREVENT:
+            score += seized_land
+    return score
 
-def handle_events() -> bool:
-    """Events handling function."""
-    for event in pg.event.get():
-        if (event.type == QUIT or
-            (event.type == KEYDOWN and event.key == K_ESCAPE)):
-            return False
-    return True
+def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface) -> None:
+    """Sprite update function."""
+    sprites.update()
+    screen.fill(WHITE)
+    sprites.draw(screen)
+    pygame.display.update()
 
-def level(screen: pg.Surface) -> None:
+def map_level(screen: pygame.Surface, seized_land: int = 0, score: int = 0) -> None:
     """Level function."""
-    clock = pg.time.Clock()
-    sprites = pg.sprite.Group()
+    clock = pygame.time.Clock()
+    sprites = pygame.sprite.Group()
 
-    while handle_events():
-        sprites.update()
-        screen.fill(BLACK)
-        sprites.draw(screen)
-        pg.display.update()
+    while score is not None:
+        score = handle_events(score, seized_land)
+        update_sprites(sprites, screen)
         clock.tick(60)
 
-def init_game() -> pg.Surface:
+def init_game() -> pygame.Surface:
     """Pygame init function."""
-    pg.init()
-    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pg.display.set_caption('Game')
+    pygame.init()
+    screen = pygame.display.set_mode(SCREEN_RESOLUTION)
+    pygame.display.set_caption('EPIT')
     return screen
 
-def main(scene_id: int = 0) -> None:
+def main() -> None:
     """Main function."""
     screen = init_game()
-
-    level(screen)
+    import minig
+    minig.switch_to_minigame("kopie",screen)
+    pygame.time.set_timer(pygame.USEREVENT, 1000)
+    map_level(screen)
 
 if __name__ == '__main__':
     main()
-    pg.quit()
+    pygame.quit()
