@@ -6,7 +6,7 @@ import minigames.synacmini as synac
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
-    "synac": synac.testminigame
+    "synac": synac.test_minigame
 }
 
 def switch_to_minigame(name, sur: pygame.Surface):

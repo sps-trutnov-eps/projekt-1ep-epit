@@ -1,6 +1,8 @@
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
+import minig
+
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
@@ -38,6 +40,7 @@ def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
 
+    minig.switch_to_minigame("synac", screen)
     level(screen)
 
 if __name__ == '__main__':

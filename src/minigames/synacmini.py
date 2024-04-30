@@ -19,6 +19,7 @@ def test_minigame():
             return mini.win_minigame()
 
         # zavolej tuto funkci každý frame (kvůli ostatním věcem jako multiplayer)
+        
         mini.mini_frame()
         
         mini.mini_surface.fill((255, 255, 255))
