@@ -1,4 +1,5 @@
 from minig import switch_to_minigame
+import netcode
 import threading
 import pygame
 from pygame import K_ESCAPE, KEYDOWN, QUIT
@@ -26,9 +27,9 @@ def map_level(screen: pygame.Surface, score: int = 0, land: int = 1) -> None:
     sprites = pygame.sprite.Group()
 
     while True:
+        netcode.client_sync()
         switch_to_minigame("test", screen)
         update_sprites(sprites, screen)
-        netcode.client_sync()
         clock.tick(60)
 
 def init_game() -> pygame.Surface:
@@ -41,12 +42,10 @@ def init_game() -> pygame.Surface:
 def main() -> None:
     """Main function."""
     screen = init_game()
+    netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
     map_level(screen)
 
-    netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
 if __name__ == '__main__':
     thread = threading.Thread(target=handle_events)
     thread.start()
     main()
-
-    exit(0) # use atexit for cleaning up
