@@ -1,16 +1,22 @@
 import sys
-
+import dataclasses
 import pygame
+import minigames.minigame_base as mini
+
 pygame.init()
 
 rozliseni_okna = (800, 600)
 
 okno = pygame.display.set_mode(rozliseni_okna)
 
+def test_minigame():
+    vyhrál = False
 
 
-
-
+@dataclasses.dataclass()
+class MinigameEndState:
+    did_win: bool
+bg_image = pygame.image.load('pozadí.png')
 antidrzeni = 0
 nahoru = 0
 postup = rozliseni_okna[0]/2
@@ -34,16 +40,21 @@ while True:
         
         stisknute_klavesy = pygame.key.get_pressed()
         okno.fill((255, 255, 255))
-        draw_text('Klikáním na přeskáčku ', text_font, (255,0,0), 10, 50)
-        draw_text('na šipku nahoru a dolu vyhraj', text_font, (255,0,0), 10, 150)
-        draw_text('Dostaň čáru na konec obrazovky', text_font, (255,0,0), 10, 250)
-        draw_text('Hru zapneš stisknutím šipky nahoru nebo dolu ', text_font, (255,0,0), 10, 350)
-        draw_text('Šipky nahoru nebo dolu ', text_font, (255,0,0), 10, 450)
+        draw_text('Klikáním na přeskáčku na ', text_font, (255,0,0), 10, 125)
+        draw_text('Šipky nahoru a dolu vyhraj', text_font, (255,0,0), 10, 175)
+        draw_text('Dostaň čáru do prava', text_font, (255,0,0), 10, 225)
+        draw_text('Nenech IT dostat čáru do leva', text_font, (255,0,0), 10, 275)
+        draw_text('Hru zapneš stisknutím ', text_font, (255,0,0), 10, 425)
+        draw_text('Šipky nahoru nebo dolu ', text_font, (255,0,0), 10, 475)
         pygame.display.flip()
     
         pygame.display.update()
         if stisknute_klavesy[pygame.K_UP] or stisknute_klavesy[pygame.K_DOWN]:
             tutorial = 0
+            
+        
+        mini.mini_frame()
+        
     else:
         
         stisknute_klavesy = pygame.key.get_pressed()
@@ -63,21 +74,28 @@ while True:
         if IT > 0 :
             postup -= 0.01
             
-     
+        if postup > rozliseni_okna[0]:
+            print("vyhrálj´jsi")
+            sys.exit()
+           # return mini.fail_minigame()
             
+        if postup < 0:
+            print("prohrál jsi")
+            sys.exit()
+            #return mini.win_minigame()
         
         
        
         
         okno.fill((255, 255, 255))
-        draw_text('Klikáním na přeskáčku ', text_font, (255,0,0), 10, 50)
-        draw_text('na šipku nahoru a dolu vyhraj', text_font, (255,0,0), 10, 150)
-        draw_text('Dostaň se na konec obrazovky', text_font, (255,0,0), 10, 250)
+        okno.blit(bg_image, (0, 0))
+
         
         
         pygame.draw.rect(okno, (0, 0, 0), (rozliseni_okna[1] - rozliseni_okna[1] +1 , 20, postup, 20))
         
         pygame.display.flip()
         
-        pygame.display.update()
+        mini.mini_frame()
+
        
