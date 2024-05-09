@@ -5,18 +5,16 @@ import minigame.simon as mini_simon
 import sys
 
 
-
 import sys
-
 import pygame
+
 pygame.init()
 
-rozliseni_okna = (800, 600)
 
+rozliseni_okna = (800, 600)
 okno = pygame.display.set_mode(rozliseni_okna)
-    
-    
-    
+
+
 pozice_hlavni_x = 175
 pozice_hlavni_y = 75
 
@@ -40,6 +38,31 @@ pozice_devaty_x = 500
 pozice_devaty_y = 400
 
 
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+BLUE = (0, 0, 255)
+
+
+ctverce = [
+    pygame.Rect(pozice_prvni_x, pozice_prvni_y, 100, 100),
+    pygame.Rect(pozice_druhy_x, pozice_druhy_y, 100, 100),
+    pygame.Rect(pozice_treti_x, pozice_treti_y, 100, 100),
+    pygame.Rect(pozice_ctvrty_x, pozice_ctvrty_y, 100, 100),
+    pygame.Rect(pozice_paty_x, pozice_paty_y, 100, 100),
+    pygame.Rect(pozice_sesty_x, pozice_sesty_y, 100, 100),
+    pygame.Rect(pozice_sedmy_x, pozice_sedmy_y, 100, 100),
+    pygame.Rect(pozice_osmy_x, pozice_osmy_y, 100, 100),
+    pygame.Rect(pozice_devaty_x, pozice_devaty_y, 100, 100)
+]
+
+
+barvy = [GRAY] * len(ctverce)
+
+
+AUTO_COLOR_CHANGE_INTERVAL = 100  
+last_color_change_time = pygame.time.get_ticks()
+
+
 while True:
     for udalost in pygame.event.get():
         if udalost.type == pygame.QUIT:
@@ -47,24 +70,35 @@ while True:
             sys.exit()
     
     
+    tlacitka_mysi = pygame.mouse.get_pressed()
     
-    okno.fill((255, 255, 255))
     
+    if tlacitka_mysi[0]:
+        mouse_pos = pygame.mouse.get_pos()
+        
+        for i, ctverec in enumerate(ctverce):
+            if ctverec.collidepoint(mouse_pos):
+                
+                barvy[i] = BLUE
+               
+                last_color_change_time = pygame.time.get_ticks()
+    
+   
+    if pygame.time.get_ticks() - last_color_change_time >= AUTO_COLOR_CHANGE_INTERVAL:
+        for i in range(len(ctverce)):
+            
+            if barvy[i] == BLUE:
+                barvy[i] = GRAY
+        
+        last_color_change_time = pygame.time.get_ticks()
+
+    
+    okno.fill(WHITE)
     pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_prvni_x, pozice_prvni_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_druhy_x, pozice_druhy_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_treti_x, pozice_treti_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_ctvrty_x, pozice_ctvrty_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_paty_x, pozice_paty_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_sesty_x, pozice_sesty_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_sedmy_x, pozice_sedmy_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_osmy_x, pozice_osmy_y, 100, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (pozice_devaty_x, pozice_devaty_y, 100, 100))
-    
-    
-    
-    
+    for ctverec, barva in zip(ctverce, barvy):
+        pygame.draw.rect(okno, barva, ctverec)
     pygame.display.update()
+
 
 
 
