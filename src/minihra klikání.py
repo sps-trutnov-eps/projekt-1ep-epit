@@ -16,7 +16,7 @@ def test_minigame():
 @dataclasses.dataclass()
 class MinigameEndState:
     did_win: bool
-bg_image = pygame.image.load('pozadí.png')
+bg_image = pygame.image.load('pozadí.v2.png')
 antidrzeni = 0
 nahoru = 0
 postup = rozliseni_okna[0]/2
@@ -24,7 +24,8 @@ IT = 100000000000000000000000000000000000000000000000000000000000000000000000000
 tutorial = 1
 
 
-text_font = pygame.font.SysFont('Arial black', 40)
+text_font = pygame.font.SysFont('Arial black', 47)
+text_font2 = pygame.font.SysFont('Arial black', 20)
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -39,13 +40,13 @@ while True:
     if tutorial == 1:
         
         stisknute_klavesy = pygame.key.get_pressed()
-        okno.fill((255, 255, 255))
-        draw_text('Klikáním na přeskáčku na ', text_font, (255,0,0), 10, 125)
-        draw_text('Šipky nahoru a dolu vyhraj', text_font, (255,0,0), 10, 175)
-        draw_text('Dostaň čáru do prava', text_font, (255,0,0), 10, 225)
-        draw_text('Nenech IT dostat čáru do leva', text_font, (255,0,0), 10, 275)
-        draw_text('Hru zapneš stisknutím ', text_font, (255,0,0), 10, 425)
-        draw_text('Šipky nahoru nebo dolu ', text_font, (255,0,0), 10, 475)
+        okno.fill((220, 220, 220))
+        draw_text('Klikáním na přeskáčku na ', text_font, (255,0,0), 10, 50)
+        draw_text('Šipky nahoru a dolu vyhraj', text_font, (255,0,0), 10, 100)
+        draw_text('Dostaň čáru do prava', text_font, (255,0,0), 10, 150)
+        draw_text('Nenech IT dostat čáru do leva', text_font, (255,0,0), 10, 200)
+        draw_text('Hru zapneš stisknutím Šipky nahoru nebo dolu ', text_font2, (0,155,0), 10, 565)
+        
         pygame.display.flip()
     
         pygame.display.update()
