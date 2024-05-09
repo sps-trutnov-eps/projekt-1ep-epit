@@ -13,7 +13,7 @@ def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface) -> None
     sprites.draw(screen)
     pygame.display.update()
 
-def map_level(screen: pygame.Surface, score: int = 0, land: int = 1) -> None:
+def map_level(screen: pygame.Surface, score: int = 0, land: list = []) -> None:
     """Level function."""
     clock = pygame.time.Clock()
     sprites = pygame.sprite.Group()

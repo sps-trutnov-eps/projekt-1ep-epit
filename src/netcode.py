@@ -290,8 +290,9 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 elif packet[0] == "ping":
                     send_packet(self.request, ("pong",*packet))
 
-                elif pygame.USEREVENT in pygame.event.get().type:
-                    send_packet(self.request, (str(score + len(land)), *packet))
+                for event in pygame.event.get():
+                    if event.type == pygame.USEREVENT:
+                        send_packet(self.request, (str(score + len(land)), *packet))
 
             except ConnectionError:
                 server_handle_disconnect(player)
