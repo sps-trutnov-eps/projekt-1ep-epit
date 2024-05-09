@@ -1,6 +1,6 @@
 import math
 import pygame as pg
-from pygame import K_ESCAPE, KEYDOWN, QUIT
+from pygame import K_ESCAPE, KEYDOWN, QUIT, K_w, K_a, K_s, K_d
 
 SCREEN_WIDTH = 800  # Adjusted screen width
 SCREEN_HEIGHT = 600  # Adjusted screen height
@@ -10,14 +10,24 @@ BLACK = (0, 0, 0)
 
 CELL_SIZE = 50
 ZOOM_FACTOR = 2  # Increase this value for more zoom
+MOVE_SPEED = 5  # Adjust move speed as needed
 
-def handle_events() -> bool:
+def handle_events(view_x, view_y) -> tuple:
     """Events handling function."""
+    keys = pg.key.get_pressed()
     for event in pg.event.get():
-        if (event.type == QUIT or
-            (event.type == KEYDOWN and event.key == K_ESCAPE)):
-            return False
-    return True
+        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+            return False, view_x, view_y
+    if keys[K_w]:
+        view_y -= MOVE_SPEED
+    if keys[K_s]:
+        view_y += MOVE_SPEED
+    if keys[K_a]:  # Corrected: Subtract from view_x when 'A' is pressed
+        view_x -= MOVE_SPEED
+    if keys[K_d]:  # Corrected: Add to view_x when 'D' is pressed
+        view_x += MOVE_SPEED
+    return True, view_x, view_y
+
 
 def draw_map(screen: pg.Surface, layout: list, view_x: int, view_y: int) -> None:
     """Draws the map."""
@@ -49,11 +59,14 @@ def check_adjacent_walls(layout: list, x: int, y: int) -> list:
         adjacent_walls.append('left')
     if x < len(layout[y]) - 1 and layout[y][x + 1] == '#':
         adjacent_walls.append('right')
-    if y > 0 and layout[y - 1][x] == '#':
+    if y > 0 and len(layout[y - 1]) > x and layout[y - 1][x] == '#':  # Check for the top adjacent cell only if y > 0 and x is within the range of the row
         adjacent_walls.append('top')
-    if y < len(layout) - 1 and layout[y + 1][x] == '#':
+    if y < len(layout) - 1 and layout[y + 1][x] == '#':  # Check for the bottom adjacent cell only if y < len(layout) - 1
         adjacent_walls.append('bottom')
     return adjacent_walls
+
+
+
 
 def map_level(screen: pg.Surface, layout: list, score: int, seized_land: int) -> int:
     """Level function."""
@@ -63,9 +76,12 @@ def map_level(screen: pg.Surface, layout: list, score: int, seized_land: int) ->
     view_x = 0
     view_y = 0
 
-    while handle_events():
+    while True:
         dt = clock.get_time() / 1000
         score += seized_land * dt
+        should_continue, view_x, view_y = handle_events(view_x, view_y)
+        if not should_continue:
+            break
         sprites.update()
         screen.fill(BLACK)
         draw_map(screen, layout, view_x, view_y)  # Draw the map
@@ -85,7 +101,6 @@ def init_game() -> pg.Surface:
 def main() -> None:
     """Main function."""
     screen = init_game()
-    start_time = pg.time.get_ticks()
     score = 0
     seized_land = 0
 
@@ -102,6 +117,7 @@ def main() -> None:
 
     score, seized_land = map_level(screen, layout, score, seized_land)
 
+    pg.quit()
+
 if __name__ == '__main__':
     main()
-    pg.quit()
