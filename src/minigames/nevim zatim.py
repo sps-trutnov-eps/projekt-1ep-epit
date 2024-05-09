@@ -4,7 +4,7 @@ import pygame
 rozliseni_okna = (1250, 800)
 okno = pygame.display.set_mode(rozliseni_okna)
 
-zivoty = 3
+zivoty = 5
 rychlost_hrace = 0.5
 x1 = 615
 y1 = 50
