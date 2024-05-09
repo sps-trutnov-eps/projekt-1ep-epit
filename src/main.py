@@ -41,7 +41,7 @@ def main() -> None:
     """Main function."""
     screen = init_game()
     import minig
-    minig.switch_to_minigame("kopie",screen)
+    minig.switch_to_minigame("podvadeni",screen)
     pygame.time.set_timer(pygame.USEREVENT, 1000)
     map_level(screen)
 
