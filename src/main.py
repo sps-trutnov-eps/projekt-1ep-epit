@@ -23,6 +23,8 @@ def map_level(screen: pygame.Surface, score: int = 0, land: int = 1) -> None:
         update_sprites(sprites, screen)
         clock.tick(60)
 
+    netcode.client_sync()
+
 def init_game() -> pygame.Surface:
     """Pygame init function."""
     pygame.init()
@@ -34,6 +36,7 @@ def main() -> None:
     """Main function."""
     screen = init_game()
     map_level(screen)
+    netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
 
 if __name__ == '__main__':
     main()
