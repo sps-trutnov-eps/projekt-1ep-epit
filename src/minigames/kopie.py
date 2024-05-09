@@ -3,7 +3,7 @@ import minigames.minigame_base as mini
 
 def kopie():
     vyhrál = False
-
+    completion_meter = pygame.Rect(50, 50, 300, 30)
     while True:
         for event in pygame.event.get():
             if (event.type == pygame.QUIT or
@@ -21,5 +21,5 @@ def kopie():
         # zavolej tuto funkci každý frame (kvůli ostatním věcem jako multiplayer)
         mini.mini_frame()
 
-        pygame.draw.rect(mini.mini_surface, (200, 200, 200), (50, 50, 100, 100))
+        pygame.draw.rect(mini.mini_surface, (200, 200, 200), completion_meter)
         pygame.display.update()
