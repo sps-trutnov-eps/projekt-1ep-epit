@@ -3,7 +3,7 @@ from pygame import K_ESCAPE, KEYDOWN, QUIT
 
 SCREEN_RESOLUTION = (1280, 960)
 BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+
 def handle_events(score: int, seized_land: int) -> int:
     """Event function."""
     for event in pygame.event.get():
@@ -16,7 +16,7 @@ def handle_events(score: int, seized_land: int) -> int:
 def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface) -> None:
     """Sprite update function."""
     sprites.update()
-    screen.fill(WHITE)
+    screen.fill(BLACK)
     sprites.draw(screen)
     pygame.display.update()
 
