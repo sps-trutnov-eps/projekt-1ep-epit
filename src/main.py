@@ -19,10 +19,13 @@ def map_level(screen: pygame.Surface, score: int = 0, land: list = []) -> None:
     sprites = pygame.sprite.Group()
 
     while True:
-        switch_to_minigame("piano", screen)
+        for event in pygame.event.get():
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                return None
         update_sprites(sprites, screen)
         clock.tick(60)
 
+    switch_to_minigame("piano", screen)
     netcode.client_sync()
 
 def init_game() -> pygame.Surface:
