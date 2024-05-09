@@ -8,6 +8,8 @@ import json
 import threading
 import subprocess
 
+import time
+
 # == EPIT server/client backend netcode ==
 
 protocol_version = 7
@@ -213,6 +215,8 @@ class ServerState:
         self.lobby = []
         self.player_info = {}
 
+        self.is_shuting_down = False
+
     # TODO: replace with dedicated-server subprocess
     # server_thread: threading.Thread
     server_tick_thread: threading.Thread
@@ -275,10 +279,6 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         # start client io loop
         while True:
             try:
-                if server_state.is_shuting_down:
-                    send_packet(self.request, ("s_server_quit",))
-                    return
-
                 # await client packet
                 packet = read_packet(self.request)
 
@@ -303,7 +303,11 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 elif packet[0] == "host_game_start":
                     server_state.server_tick_thread.start()
 
-                # TODO: server quit handling
+                elif packet[0] == "host_server_quit":
+                    server_state.is_shuting_down = True
+                    
+                    send_packet(self.request, ("server_quit",))
+                    return
 
                 elif packet[0] == "ping":
                     send_packet(self.request, ("pong",*packet))
@@ -324,6 +328,10 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
             # game score
 
             game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+
+            if server_state.is_shuting_down:
+                send_packet(self.request, ("server_quit",))
+                return
 
 # starts the server python thread in the backgound
 def start_server():
@@ -381,7 +389,12 @@ def quit_netcode():
     disconnect_as_client()
 
     if hosting:
-        server_process.communicate()
+        # if i try to server.shutdown() everything deadlocks so..
+
+        print("server: shuting down server...")
+
+        time.sleep(1)
+        server_process.kill()
 
 # `python netcode.py` to start a dedicated server
 if __name__ == '__main__':
