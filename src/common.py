@@ -21,3 +21,7 @@ def is_click_on_ui(ui_rect: pygame.Rect, event: pygame.event.Event) -> bool:
     rel_pos = (pos[0] - ui_rect[0], pos[1] - ui_rect[1])
 
     return (rel_pos[0] >= 0 and rel_pos[0] <= ui_rect[2]) and (rel_pos[1] >= 0 and rel_pos[1] <= ui_rect[3])
+
+# z rect vám vrátí střed daného rectu, užitečné pro text rendering
+def center_in_rect(ui_rect: pygame.Rect, text_rect: pygame.Rect = (0, 0, 0, 0)) -> tuple:
+    return (ui_rect[0] + ui_rect[2] // 2 - text_rect[2] // 2, ui_rect[1] + ui_rect[3] // 2 - text_rect[3] // 2)
