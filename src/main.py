@@ -38,6 +38,8 @@ def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
 
+    minig.switch_to_minigame("simon", screen)
+
     level(screen)
 
 if __name__ == '__main__':
