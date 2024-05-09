@@ -1,4 +1,5 @@
 import pygame
+import netcode
 import minigames.minigame_base as mini
 import minigames.test as mini_test
 import minigames.piano as piano
@@ -26,7 +27,7 @@ def switch_to_minigame(name, screen: pygame.Surface):
         pass # minihra nemá wil/fail state (např. automat)
 
     elif result.did_win == False: # win
-        pass # TODO: pro Pavla
+        netcode.send_packet(client_state.server_conn, (str(score + 100), player_name, protocol_version))
     
     elif result.did_win == True: # fail
-        pass # TODO: pro Pavla
+        netcode.send_packet(client_state.server_conn, (str(score), player_name, protocol_version))
