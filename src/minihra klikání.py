@@ -46,7 +46,7 @@ while True:
     if tutorial == 1:
         
         stisknute_klavesy = pygame.key.get_pressed()
-        okno.fill((220, 220, 220))
+        okno.fill((190, 190, 190))
         draw_text('Klikáním na přeskáčku na ', text_font, (255,0,0), 10, 50)
         draw_text('Šipky nahoru a dolu vyhraj', text_font, (255,0,0), 10, 100)
         draw_text('Dostaň čáru do prava', text_font, (255,0,0), 10, 150)
@@ -65,7 +65,7 @@ while True:
         mini.mini_frame()
         
     elif hra == 1:
-        cas += 0.008888888888888888888888888888888888
+        cas += 0.001222222222222222222
         cps = clicks/cas
         cps2 = round(cps, 2)
         
@@ -86,7 +86,7 @@ while True:
             clicks -= 2
         
         if IT > 0 :
-            postup -= 0.05
+            postup -= 0.01
             
             
         if postup > rozliseni_okna[0]:
@@ -97,7 +97,7 @@ while True:
             print("prohrál jsi")
             #return mini.fail_minigame()
         
-        
+       
         
        
         
@@ -117,7 +117,7 @@ while True:
 
     else:
         
-        okno.fill((255, 255, 255))
+        okno.fill((190, 190, 190))
         draw_text("tvoje CPS:", text_font2, (255,0,0), rozliseni_okna[0]/2- + 350, rozliseni_okna[1]/2 - 20)
         draw_text(str(cps2), text_font3, (0,255,0), rozliseni_okna[0]/2- + 250, rozliseni_okna[1]/2 - 200)
         
