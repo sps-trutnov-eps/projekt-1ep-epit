@@ -7,6 +7,7 @@ import select
 import json
 import threading
 import subprocess
+import hashlib
 
 import time
 from typing import Callable
@@ -272,6 +273,10 @@ class ServerState:
         self.player_info = {}
         self.game_state = 0
 
+    # used to detect lobby changes between clients
+    def hash_lobby(self) -> bytes:
+        return hashlib.md5(json.dumps(self.lobby).encode('utf-8')).digest()
+
     server_tick_thread: threading.Thread
     server: socketserver.ThreadingTCPServer
 
@@ -341,13 +346,13 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         player_name = init_packet[1]
         server_state.lobby[player_name] = [0]
         
-        client_lobby = server_state.lobby.copy()
+        client_lobby_hash = server_state.hash_lobby()
         client_game_state = server_state.game_state
 
         if init_packet[3] or len(server_state.host_players) == 0: # always at least one person must be "host" player
             server_state.host_players.add(init_packet[1])
 
-        send_packet(self.request, ("s_init_success", client_lobby, client_game_state, player_name in server_state.host_players))
+        send_packet(self.request, ("s_init_success", server_state.lobby, client_game_state, player_name in server_state.host_players))
 
         print(f"server: client {player_name} connected!")
 
@@ -414,8 +419,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     # lobby packets
 
                     elif packet[0] == "change_team":
-                        client_lobby[player_name][0] = packet[1]
-                        server_state.lobby = client_lobby
+                        server_state.lobby[player_name][0] = packet[1]
 
                     elif packet[0] == "ping":
                         send_packet(self.request, ("pong",*packet))
@@ -451,10 +455,11 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 elif client_game_state == 1: # switch to game (game start)
                     send_packet(self.request, ("s_game_event", "game_start"))
 
-            if not client_lobby == server_state.lobby:
-                client_lobby = server_state.lobby.copy()
+            lob_hash = server_state.hash_lobby()
+            if not client_lobby_hash == lob_hash:
+                client_lobby_hash = lob_hash
 
-                send_packet(self.request, ("s_game_event", "lobby_update", client_lobby))
+                send_packet(self.request, ("s_game_event", "lobby_update", server_state.lobby))
 
 # starts the server python thread in the backgound
 def start_server():
