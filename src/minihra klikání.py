@@ -83,10 +83,10 @@ while True:
         
         if stisknute_klavesy[pygame.K_DOWN] and stisknute_klavesy[pygame.K_UP]:
             postup -= 10
-            clicks -= 1
+            clicks -= 2
         
         if IT > 0 :
-            postup -= 0.01
+            postup -= 0.05
             
             
         if postup > rozliseni_okna[0]:
@@ -118,8 +118,8 @@ while True:
     else:
         
         okno.fill((255, 255, 255))
-        draw_text("tvoje CPS:", text_font2, (255,0,0), rozliseni_okna[0]/2- + 300, rozliseni_okna[1]/2 - 20)
-        draw_text(str(cps2), text_font3, (0,255,0), rozliseni_okna[0]/2- + 200, rozliseni_okna[1]/2 - 200)
+        draw_text("tvoje CPS:", text_font2, (255,0,0), rozliseni_okna[0]/2- + 350, rozliseni_okna[1]/2 - 20)
+        draw_text(str(cps2), text_font3, (0,255,0), rozliseni_okna[0]/2- + 250, rozliseni_okna[1]/2 - 200)
         
         konec += 0.1
         if konec > 100:
