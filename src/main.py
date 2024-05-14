@@ -20,7 +20,12 @@ def handle_events() -> bool:
 
 # == lobby ==
 
-lobby_info = None
+# lobby data (dict indexed by player_name containing [team_index])
+lobby_info: dict[str, list[int]] = None
+
+# can change team by `netcode.change_team(index)` (only when in lobby)
+
+# game result data (TODO)
 result_info = None
 
 def set_lobby_info(lobby: list):

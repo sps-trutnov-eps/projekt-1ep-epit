@@ -13,7 +13,7 @@ from typing import Callable
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 9
+protocol_version = 10
 packet_len_bytes = 2
 
 # == client state ==
@@ -183,6 +183,12 @@ def start_game():
     
     send_packet(client_state.server_conn, ("host_game_start",))
 
+def change_team(index: int):
+    if not client_state.game_state == 0:
+        raise ValueError("player can only change teams if in lobby, not in game!") # can be changed if we allow changing teams while in-game
+
+    send_packet(client_state.server_conn, ("change_team", index))
+
 # note: called by the server!!!
 def game_end():
     server_state.game_state = 0
@@ -258,13 +264,12 @@ class ServerState:
         # the server should be under a lock but i don't care for a 5 milisecond race condition
         # assert self.server_lock.acquire(False)
 
-        self.lobby = []
+        self.is_shuting_down = False
+
+        self.lobby = {}
         self.host_players = set()
 
         self.player_info = {}
-
-        self.is_shuting_down = False
-
         self.game_state = 0
 
     server_tick_thread: threading.Thread
@@ -272,8 +277,8 @@ class ServerState:
 
     remote_locks: dict[str, threading.Lock]
     
-    # lobby data (list of (player_name, team_index))
-    lobby_players: list[tuple[str, int]]
+    # lobby data (dict indexed by player_name containing [team_index])
+    lobby_players: dict[str, list[int]]
     host_players: set[str]
 
     # in-game data
@@ -288,7 +293,7 @@ server_process: subprocess.Popen # only used when running internal server
 def server_handle_disconnect(player):
     print(f"server: client {player} disconnected")
 
-    server_state.lobby.remove(player)
+    server_state.lobby.pop(player)
 
     server_state.host_players.discard(player)
     if len(server_state.host_players) == 0 and len(server_state.lobby) != 0:
@@ -328,12 +333,15 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
         init_packet = server_handle_connect(self.request)
 
+        if init_packet == None:
+            return
+
         # init client handler
 
         player_name = init_packet[1]
-        server_state.lobby.append(player_name)
+        server_state.lobby[player_name] = [0]
         
-        client_lobby = server_state.lobby
+        client_lobby = server_state.lobby.copy()
         client_game_state = server_state.game_state
 
         if init_packet[3] or len(server_state.host_players) == 0: # always at least one person must be "host" player
@@ -380,6 +388,8 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     elif packet[0] == "lock_release":
                         server_state.remote_locks[packet[1]].release()
 
+                    # host packets
+
                     elif packet[0] == "host_game_start":
                         if not player_name in server_state.host_players:
                             continue # player is not host
@@ -401,6 +411,12 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                         send_packet(self.request, ("server_quit",))
                         return
 
+                    # lobby packets
+
+                    elif packet[0] == "change_team":
+                        client_lobby[player_name][0] = packet[1]
+                        server_state.lobby = client_lobby
+
                     elif packet[0] == "ping":
                         send_packet(self.request, ("pong",*packet))
 
@@ -421,6 +437,8 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
             game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
 
+            # check for changed synced data
+
             if server_state.is_shuting_down:
                 send_packet(self.request, ("server_quit",))
                 return
@@ -432,6 +450,11 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     send_packet(self.request, ("s_game_event", "game_end", None))
                 elif client_game_state == 1: # switch to game (game start)
                     send_packet(self.request, ("s_game_event", "game_start"))
+
+            if not client_lobby == server_state.lobby:
+                client_lobby = server_state.lobby.copy()
+
+                send_packet(self.request, ("s_game_event", "lobby_update", client_lobby))
 
 # starts the server python thread in the backgound
 def start_server():
