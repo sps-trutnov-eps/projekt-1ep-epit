@@ -1,75 +1,105 @@
 import pygame
 import sys
 import math
-pygame.init()
-    
-okno = pygame.display.set_mode((1200, 800))
 
-pozicey1 = 500
-pozicex1 = 500
+pygame.init()
+
+# Set up the window
+window_width = 1200
+window_height = 800
+window = pygame.display.set_mode((window_width, window_height))
+
+# Load the car image
+car_image_path = "./obrazky racegame/formula.png"
+car_image = pygame.image.load(car_image_path)
+car_rect = car_image.get_rect()
+
+# Car starting position
+car_pos_x = 500
+car_pos_y = 500
+
+# Car starting angle
+car_angle = 0
 
 clock = pygame.time.Clock()
 
+# Load and scale the formula image
+formula_path = "./obrazky racegame/formula.png"
+formula = pygame.image.load(formula_path)
+scaled_formula = pygame.transform.scale(formula, (70, 30))  # Adjust size as needed
+formula_rect = scaled_formula.get_rect()
+
+# Define obstacles
+obstacles = [
+    pygame.Rect(200, 500, 500, 100),
+    pygame.Rect(600, 500, 100, 200),
+    pygame.Rect(600, 600, 400, 100),
+    pygame.Rect(900, 200, 100, 400),
+    pygame.Rect(900, 200, 200, 100),
+    pygame.Rect(1000, 0, 100, 300),
+    pygame.Rect(800, 0, 300, 100),
+    pygame.Rect(800, 0, 100, 200),
+    pygame.Rect(200, 100, 700, 100),
+    pygame.Rect(200, 200, 100, 400)
+]
+
+# Define speed of the formula
+formula_speed = 0.1  # Adjust as needed
 
 while True:
- 
-    
-    for udalost in pygame.event.get():
-        if udalost.type == pygame.QUIT:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-    okno.fill((79, 121, 66))
-    
-    pygame.draw.rect(okno, (128, 128, 128), (200, 500, 500, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (600, 500, 100, 200))
-    pygame.draw.rect(okno, (128, 128, 128), (600, 600, 400, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (900, 200, 100, 400))
-    pygame.draw.rect(okno, (128, 128, 128), (900, 200, 200, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (1000, 0, 100, 300))
-    pygame.draw.rect(okno, (128, 128, 128), (800, 0, 300, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (800, 0, 100, 200))
-    pygame.draw.rect(okno, (128, 128, 128), (200, 100, 700, 100))
-    pygame.draw.rect(okno, (128, 128, 128), (200, 200, 100, 400))
-    
-    hrac = pygame.draw.rect(okno, (255, 255, 255), (pozicex1, pozicey1, 20, 20))
-    
-    time = 600
-    
-    stisknute_klavesy = pygame.key.get_pressed()
-    
-    if stisknute_klavesy[pygame.K_w]:
-        pozicey1 -= 0.3
-    if stisknute_klavesy[pygame.K_s]:
-        pozicey1 += 0.3
-    if stisknute_klavesy[pygame.K_a]:
-        pozicex1 -= 0.3
-    if stisknute_klavesy[pygame.K_d]:
-        pozicex1 += 0.3
-        
-    if 300 < pozicex1 < 700 and 500 > pozicey1 > 300:
-        pozicey1 = 500
-    if 190 < pozicex1 < 599 and pozicey1 > 580:
-        pozicey1 = 580
-    if 100 < pozicey1 < 600 and pozicex1 < 200:
-        pozicex1 = 200
-    if 200 < pozicex1 < 799 and pozicey1 < 100:
-       pozicey1 = 100
-    if 0 < pozicey1 < 100 and 800 > pozicex1:
-        pozicex1 = 800
-    if pozicey1 < 0:
-        pozicey1 = 0
-    if 600 < pozicey1 < 700 and 600 > pozicex1:
-        pozicex1 = 600
-    if 580 < pozicex1 < 1000 and pozicey1 > 680:
-        pozicey1 = 680
-    if 200 < pozicey1 < 500 and 280 < pozicex1 < 400:
-        pozicex1 = 280
-    
-    
-    
-    
-    
-    
-        
-    pygame.display.update()
-    
+
+    window.fill((79, 121, 66))
+
+    # Draw obstacles
+    for obstacle in obstacles:
+        pygame.draw.rect(window, (128, 128, 128), obstacle)
+
+    # Rotate the car
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_a]:
+        car_angle += 1
+    if keys[pygame.K_d]:
+        car_angle -= 1
+
+    # Move the car forward
+    if keys[pygame.K_w]:
+        new_pos_x = car_pos_x + math.cos(math.radians(car_angle)) * 2
+        new_pos_y = car_pos_y - math.sin(math.radians(car_angle)) * 2
+
+        # Check if the new position is within the area defined by obstacles
+        within_bounds = False
+        for obstacle in obstacles:
+            if obstacle.collidepoint(new_pos_x, new_pos_y):
+                within_bounds = True
+                break
+
+        if within_bounds:
+            car_pos_x = new_pos_x
+            car_pos_y = new_pos_y
+
+    # Wrap around screen
+    if car_pos_x > window_width:
+        car_pos_x = 0
+    elif car_pos_x < 0:
+        car_pos_x = window_width
+    if car_pos_y > window_height:
+        car_pos_y = 0
+    elif car_pos_y < 0:
+        car_pos_y = window_height
+
+    # Draw the scaled formula
+    rotated_formula = pygame.transform.rotate(scaled_formula, car_angle)  # Rotate the formula
+    formula_rect = rotated_formula.get_rect(center=car_rect.center)  # Set rotation point to center
+    formula_rect.topleft = (car_pos_x - formula_rect.width / 2, car_pos_y - formula_rect.height / 2)
+    window.blit(rotated_formula, formula_rect.topleft)
+
+    pygame.display.flip()
+    clock.tick(120)  # Keep FPS at 60
+
+    # Slow down the formula movement
+    pygame.time.delay(int(1000 / 60 * formula_speed))  # 60 FPS equivalent delay with speed adjustment
+
