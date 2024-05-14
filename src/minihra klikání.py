@@ -26,6 +26,7 @@ cps2 = 1
 IT = 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 tutorial = 1
 hra = 0
+konec = 0
 
 
 text_font = pygame.font.SysFont('Arial black', 47)
@@ -89,14 +90,12 @@ while True:
             
             
         if postup > rozliseni_okna[0]:
-            print("vyhrál jsi")
             hra = 0
-           # return mini.fail_minigame()
+           
             
         if postup < 0:
             print("prohrál jsi")
-            hra = 0
-            #return mini.win_minigame()
+            #return mini.fail_minigame()
         
         
         
@@ -121,6 +120,14 @@ while True:
         okno.fill((255, 255, 255))
         draw_text("tvoje CPS:", text_font2, (255,0,0), rozliseni_okna[0]/2- + 300, rozliseni_okna[1]/2 - 20)
         draw_text(str(cps2), text_font3, (0,255,0), rozliseni_okna[0]/2- + 200, rozliseni_okna[1]/2 - 200)
+        
+        konec += 0.1
+        if konec > 100:
+            print("vyhrál jsi")
+            sys.exit()
+            # return mini.win_minigame()
+            
+            
         
         pygame.display.flip()
         
