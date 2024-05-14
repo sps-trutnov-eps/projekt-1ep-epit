@@ -9,6 +9,13 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 
+player0 = pygame.image.load("player0.png")
+player1 = pygame.image.load("player1.png")
+player2 = pygame.image.load("player2.png")
+player3 = pygame.image.load("player3.png")
+player4 = pygame.image.load("player4.png")
+player5 = pygame.image.load("player5.png")
+
 class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h):
         super().__init__()
@@ -18,6 +25,17 @@ class Button(pygame.sprite.Sprite):
     
     def update(self, color):
         self.image.fill(color)
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y, image):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.image = image
+        self.rect = self.image.get_rect(topleft=(x, y))
+    
+    def draw(self, screen):
+        screen.blit(self.image, (self.x, self.y))
 
 def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface, team: str) -> None:
     """Sprite update function."""
@@ -43,20 +61,21 @@ def map_level(screen: pygame.Surface, score: int = 0, land: list = ["T10"]) -> N
 
 def lobby(screen: pygame.Surface):
     sprites = pygame.sprite.Group()
-    button = Button(1000 , 100, 200, 50)
+    button = Button(SCREEN_RESOLUTION[0]*(4 / 5) , SCREEN_RESOLUTION[1]*(1 / 5), 200, 50)
+    for i in range(5):
+        player = Player(SCREEN_RESOLUTION[0]*((1 + i) / 6), SCREEN_RESOLUTION // 2, player0)
     sprites.add(button)
-    team = "1.EP"
+    team = 0
 
     while True:
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 return None
             if button.rect.collidepoint(pygame.mouse.get_pos()) and event.type == MOUSEBUTTONDOWN:
-                if team == "1.EP":
-                    team = "1.IT"
+                if team == 0:
+                    team = 1
                 else:
-                    team = "1.EP"
-        print(team)
+                    team = 0
         update_sprites(sprites, screen, team)
 
 def init_game() -> pygame.Surface:
