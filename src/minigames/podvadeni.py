@@ -1,6 +1,6 @@
 import pygame
 import minigames.minigame_base as mini
-
+import random
 def podvadeni():
     vyhrál = False
     completion_meter = pygame.Rect(50, 50, 300, 30)
@@ -9,6 +9,10 @@ def podvadeni():
     timer = pygame.Rect(50, 130, 300, 30)
     time = pygame.Rect(50, 130, 300, 30)
     seconds = 30000
+    teacher_looking = False
+    teacher_time = random.randint(0, 10)
+    teacher_timer = 0
+    teacher_set = False 
     
     backdrop = pygame.Rect(0, 0, 1280, 960)
     
@@ -36,12 +40,22 @@ def podvadeni():
         if time.width <= 0:
             return mini.fail_minigame()
         
+        #podvádění - MEZERNÍK
         if stisknute_klavesy[pygame.K_SPACE]:
             percent += 1
         if percent <= 1800:
             completion.width = percent/6
         if percent >= 1800:
             return mini.win_minigame()
+        
+        #učitel
+        if not teacher_set:
+            teacher_timer = teacher_time * 60
+            teacher_set = True 
+        if teacher_set:
+            teacher_timer -= 1
+        if teacher_looking and stisknute_klavesy[pygame.K_SPACE]:
+            return mini.fail_minigame()
 
         # zavolej tuto funkci každý frame (kvůli ostatním věcem jako multiplayer)
         mini.mini_frame()
