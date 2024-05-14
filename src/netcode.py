@@ -13,7 +13,7 @@ from typing import Callable
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 8
+protocol_version = 9
 packet_len_bytes = 2
 
 # == client state ==
@@ -87,7 +87,7 @@ def read_packet(sock: socket.socket) -> list:
 
 # called once per client frame to sync with server
 def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None]:
-    # parse server packets (if any)
+    # == parse server packets (if any) ==
 
     packets = []
 
@@ -108,7 +108,7 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
             except ConnectionError:
                 return (False, "Stráta spojení se serverem.")
 
-    # process received packets
+    # == process received packets ==
 
     lock_response = None
 
@@ -200,27 +200,29 @@ def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks:
 
     # init client with the server
     try:
-        send_packet(client_state.server_conn, ("p_init", player_name, protocol_version))
+        send_packet(client_state.server_conn, ("p_init", player_name, protocol_version, is_host))
 
         # await server response
-        response = read_packet(client_state.server_conn)[0]
+        response = read_packet(client_state.server_conn)
 
-        if response == "s_init_success":
-            client_state.on_lobby_info(response[2])
-            client_state.game_state = response[3]
+        if response[0] == "s_init_success":
+            client_state.on_lobby_info(response[1])
+            client_state.game_state = response[2]
+            
+            # print("client: i'm i host?", response[3])
 
             return (True, None)
         else:
-            if response == "s_init_name_taken":
+            if response[0] == "s_init_name_taken":
                 return (False, "Server: Jméno hráče je už zabrané.")
 
-            elif response == "s_init_match_running":
+            elif response[0] == "s_init_match_running":
                 return (False, "Server: Hra už byla hostujícím spuštěna.")
 
-            elif response == "s_unexpected_packet":
+            elif response[0] == "s_unexpected_packet":
                 return (False, "Server: Interní chyba komunikace...")
             
-            elif response == "s_version_mismatch":
+            elif response[0] == "s_version_mismatch":
                 return (False, "Verze Hry Hráče a Serveru se liší.")
 
             else:
@@ -241,14 +243,13 @@ def disconnect_as_client():
 # == server state ==
 
 class ServerState:
-    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state"]
+    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players"]
 
     def __init__(self) -> None:
         # init the server infrastructure
         
         self.server = socketserver.ThreadingTCPServer(('', 15533), ServerClientConnectionHandler)
-        # self.server_thread = threading.Thread(target=self.server.serve_forever)
-        # self.server_thread.daemon = True
+        self.server.daemon_threads = True
 
         # note: tick thread is setup on host_game_start
 
@@ -258,23 +259,25 @@ class ServerState:
         # assert self.server_lock.acquire(False)
 
         self.lobby = []
+        self.host_players = set()
+
         self.player_info = {}
 
         self.is_shuting_down = False
 
         self.game_state = 0
 
-    # TODO: replace with dedicated-server subprocess
-    # server_thread: threading.Thread
     server_tick_thread: threading.Thread
-
     server: socketserver.ThreadingTCPServer
 
     remote_locks: dict[str, threading.Lock]
     
-    lobby: list
-    player_info: dict
+    # lobby data (list of (player_name, team_index))
+    lobby_players: list[tuple[str, int]]
+    host_players: set[str]
 
+    # in-game data
+    player_info: dict
     game_state: int
 
 server_state: ServerState
@@ -287,34 +290,43 @@ def server_handle_disconnect(player):
 
     server_state.lobby.remove(player)
 
+    server_state.host_players.discard(player)
+    if len(server_state.host_players) == 0 and len(server_state.lobby) != 0:
+        server_state.host_players.add(server_state.lobby[0][0])
+
+def server_handle_connect(req: socket.socket) -> str | None:
+    try:
+        init_packet = read_packet(req)
+    except:
+        print("server: new client<->server connection failed while initing client")
+        raise
+
+    if not init_packet[0] == "p_init":
+        print("server: refused new connection due to protocol error!")
+
+        send_packet(req, ("s_unexpected_packet",))
+        return
+
+    elif not init_packet[2] == protocol_version:
+        print("server: refused new connection due to version mismatch!")
+
+        send_packet(req, ("s_version_mismatch",))
+        return
+
+    elif init_packet[1] in server_state.lobby:
+        print("server: refused new connection due to name being taken!")
+
+        send_packet(req, ("s_init_name_taken",))
+        return
+
+    return init_packet
+
 class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
     # started for every connected client to the server, handles all transport level io for that client
     def handle(self):
         # new client connected, await clients "init" message
 
-        try:
-            init_packet = read_packet(self.request)
-        except:
-            print("server: new client<->server connection failed while initing client")
-            raise
-
-        if not init_packet[0] == "p_init":
-            print("server: refused new connection due to protocol error!")
-
-            send_packet(self.request, ("s_unexpected_packet",))
-            return
-
-        elif not init_packet[2] == protocol_version:
-            print("server: refused new connection due to version mismatch!")
-
-            send_packet(self.request, ("s_version_mismatch",))
-            return
-
-        elif init_packet[1] in server_state.lobby:
-            print("server: refused new connection due to name being taken!")
-
-            send_packet(self.request, ("s_init_name_taken",))
-            return
+        init_packet = server_handle_connect(self.request)
 
         # init client handler
 
@@ -324,57 +336,79 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         client_lobby = server_state.lobby
         client_game_state = server_state.game_state
 
-        send_packet(self.request, ("s_init_success", client_lobby, client_game_state))
+        if init_packet[3] or len(server_state.host_players) == 0: # always at least one person must be "host" player
+            server_state.host_players.add(init_packet[1])
+
+        send_packet(self.request, ("s_init_success", client_lobby, client_game_state, player_name in server_state.host_players))
 
         print(f"server: client {player_name} connected!")
 
         # start client io loop
         while True:
             try:
-                # await client packet
-                packet = read_packet(self.request)
+                # check for received client packets
 
-                # process client packet
+                packets = []
 
-                if packet[0] == "lock_acquire":
-                    lock = server_state.remote_locks.get(packet[1])
+                while True:
+                    read_sockets, _, _ = select.select((self.request,), tuple(), tuple(), 0)
 
-                    if lock == None:
-                        # create new lock
+                    if len(read_sockets) == 0:
+                        break
 
-                        lock = threading.Lock()
-                        server_state.remote_locks[packet[1]] = lock
+                    for sock in read_sockets:
+                        # receive and parse packets from tcp stream
 
-                    did_acquire = lock.acquire(False)
+                        packets.append(read_packet(sock))
 
-                    send_packet(self.request, ("s_lock_response", did_acquire))
-                
-                elif packet[0] == "lock_release":
-                    server_state.remote_locks[packet[1]].release()
+                # == process client packets ==
 
-                elif packet[0] == "host_game_start":
-                    if not server_state.game_state == 0:
-                        continue
+                for packet in packets:
+                    if packet[0] == "lock_acquire":
+                        lock = server_state.remote_locks.get(packet[1])
 
-                    server_state.game_state = 1
+                        if lock == None:
+                            # create new lock
 
-                    server_state.server_tick_thread = threading.Thread(target=game_end)
-                    server_state.server_tick_thread.start()
+                            lock = threading.Lock()
+                            server_state.remote_locks[packet[1]] = lock
 
-                elif packet[0] == "host_server_quit":
-                    server_state.is_shuting_down = True
+                        did_acquire = lock.acquire(False)
+
+                        send_packet(self.request, ("s_lock_response", did_acquire))
                     
-                    send_packet(self.request, ("server_quit",))
-                    return
+                    elif packet[0] == "lock_release":
+                        server_state.remote_locks[packet[1]].release()
 
-                elif packet[0] == "ping":
-                    send_packet(self.request, ("pong",*packet))
+                    elif packet[0] == "host_game_start":
+                        if not player_name in server_state.host_players:
+                            continue # player is not host
+
+                        if not server_state.game_state == 0:
+                            continue
+
+                        server_state.game_state = 1
+
+                        server_state.server_tick_thread = threading.Thread(target=game_end)
+                        server_state.server_tick_thread.start()
+
+                    elif packet[0] == "host_server_quit":
+                        if not player_name in server_state.host_players:
+                            continue # player is not host
+
+                        server_state.is_shuting_down = True
+                        
+                        send_packet(self.request, ("server_quit",))
+                        return
+
+                    elif packet[0] == "ping":
+                        send_packet(self.request, ("pong",*packet))
 
             except ConnectionError:
                 server_handle_disconnect(player_name)
                 return
             
-            # send server tick to client
+            # == send server packets to client ==
 
             game_tick = ("s_game_tick", {}, {})
 
@@ -399,7 +433,6 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 elif client_game_state == 1: # switch to game (game start)
                     send_packet(self.request, ("s_game_event", "game_start"))
 
-
 # starts the server python thread in the backgound
 def start_server():
     # load and init the server infrastructure on this thread
@@ -423,12 +456,13 @@ def terminate_server():
     print("server: waiting for server to terminate...")
 
     server_state.server.shutdown()
-    # server_state.server_thread.join()
 
 # == netcode api ==
 
 def setup_netcode(addr, player_name: str, is_host: bool, client_hooks: list):
     global server_process
+
+    atexit.register(quit_netcode)
     
     if is_host:
         server_process = subprocess.Popen(("python", "./src/netcode.py"))
@@ -443,7 +477,6 @@ def setup_netcode(addr, player_name: str, is_host: bool, client_hooks: list):
         exit(-1)
 
 # handles netcode clean up at exit
-@atexit.register
 def quit_netcode():
     if client_state.is_host:
         send_packet(client_state.server_conn, ("host_server_quit",))
@@ -455,8 +488,7 @@ def quit_netcode():
 
         print("server: shuting down server...")
 
-        time.sleep(1)
-        server_process.kill()
+        server_process.terminate()
 
 # `python netcode.py` to start a dedicated server
 if __name__ == '__main__':
