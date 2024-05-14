@@ -44,7 +44,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("player0.png")
         self.rect = self.image.get_rect(center=(x, y))
-    
+
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
@@ -55,17 +55,18 @@ def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface, team: i
     sprites.draw(screen)
     pygame.display.update()
 
-def map_level(screen: pygame.Surface, score: int = 0, land: list = ["T10"]) -> None:
+def map_level(screen: pygame.Surface, team: int, score: int = 0) -> None:
     """Level function."""
     clock = pygame.time.Clock()
     sprites = pygame.sprite.Group()
+    land = ["T10"] if team == 0 else ["T7"]
 
     while True:
         # switch_to_minigame("piano", screen)
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 return None
-        update_sprites(sprites, screen)
+        update_sprites(sprites, screen, team)
         clock.tick(60)
         # netcode.client_sync()
 
@@ -90,7 +91,7 @@ def lobby(screen: pygame.Surface):
                 else:
                     team = 0
             if play_button.rect.collidepoint(pygame.mouse.get_pos()) and event.type == MOUSEBUTTONDOWN:
-                map_level(screen)
+                map_level(screen, team)
         update_sprites(sprites, screen, team)
 
 def init_game() -> pygame.Surface:
