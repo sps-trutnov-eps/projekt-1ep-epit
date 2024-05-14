@@ -7,7 +7,7 @@ import minigames.podvadeni as mini_podvadeni
 minigame_lib = {
     "test": mini_test.test_minigame,
     "piano": piano.piano,
-    "podvadeni": mini_podvadeni.podvadeni()
+    "podvadeni": mini_podvadeni.podvadeni
 }
 
 def switch_to_minigame(name, sur: pygame.Surface):
