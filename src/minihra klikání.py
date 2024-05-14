@@ -17,15 +17,20 @@ def test_minigame():
 class MinigameEndState:
     did_win: bool
 bg_image = pygame.image.load('pozadí.v2.png')
-antidrzeni = 0
 nahoru = 0
 postup = rozliseni_okna[0]/2
+clicks = 0
+cas = 0.1111111111
+cps = 1
+cps2 = 1
 IT = 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 tutorial = 1
+hra = 0
 
 
 text_font = pygame.font.SysFont('Arial black', 47)
 text_font2 = pygame.font.SysFont('Arial black', 20)
+text_font3 = pygame.font.SysFont('Arial black', 200)
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -47,16 +52,21 @@ while True:
         draw_text('Nenech IT dostat čáru do leva', text_font, (255,0,0), 10, 200)
         draw_text('Hru zapneš stisknutím Šipky nahoru nebo dolu ', text_font2, (0,155,0), 10, 565)
         
+        
         pygame.display.flip()
     
         pygame.display.update()
         if stisknute_klavesy[pygame.K_UP] or stisknute_klavesy[pygame.K_DOWN]:
             tutorial = 0
+            hra = 1
             
         
         mini.mini_frame()
         
-    else:
+    elif hra == 1:
+        cas += 0.008888888888888888888888888888888888
+        cps = clicks/cas
+        cps2 = round(cps, 2)
         
         stisknute_klavesy = pygame.key.get_pressed()
           
@@ -68,28 +78,35 @@ while True:
         if nahoru > 0 and stisknute_klavesy[pygame.K_DOWN]:
             nahoru = 0
             postup += 10
+            clicks += 2
         
         if stisknute_klavesy[pygame.K_DOWN] and stisknute_klavesy[pygame.K_UP]:
             postup -= 10
+            clicks -= 1
         
         if IT > 0 :
             postup -= 0.01
             
+            
         if postup > rozliseni_okna[0]:
-            print("vyhrálj´jsi")
-            sys.exit()
+            print("vyhrál jsi")
+            hra = 0
            # return mini.fail_minigame()
             
         if postup < 0:
             print("prohrál jsi")
-            sys.exit()
+            hra = 0
             #return mini.win_minigame()
+        
         
         
        
         
         okno.fill((255, 255, 255))
         okno.blit(bg_image, (0, 0))
+        
+        draw_text("CPS:", text_font2, (255,0,0), 5, 225)
+        draw_text(str(cps2), text_font, (0,255,0), 60, 200)
 
         
         
@@ -99,4 +116,13 @@ while True:
         
         mini.mini_frame()
 
-       
+    else:
+        
+        okno.fill((255, 255, 255))
+        draw_text("tvoje CPS:", text_font2, (255,0,0), rozliseni_okna[0]/2- + 300, rozliseni_okna[1]/2 - 20)
+        draw_text(str(cps2), text_font3, (0,255,0), rozliseni_okna[0]/2- + 200, rozliseni_okna[1]/2 - 200)
+        
+        pygame.display.flip()
+        
+        mini.mini_frame()
+        
