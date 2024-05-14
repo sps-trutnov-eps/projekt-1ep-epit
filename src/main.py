@@ -161,12 +161,12 @@ def init_game() -> pygame.Surface:
     pygame.display.set_caption('EPIT')
     return screen
 
-def main() -> None:
+def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
     lobby(screen)
 
-    # netcode.setup_netcode(("127.0.0.1", 15533), "player #1", True, (set_lobby_info, set_result_info))
+    netcode.setup_netcode(("127.0.0.1", 15533), "player #1", True, (set_lobby_info, set_result_info))
 
     # simple scene switcher, lobby or level return the index of the next scene (None = exit)
     

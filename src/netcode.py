@@ -516,7 +516,6 @@ def quit_netcode():
 # `python netcode.py` to start a dedicated server
 if __name__ == '__main__':
     atexit.register(terminate_server)
-    pygame.time.set_timer(pygame.USEREVENT, 1000)
     start_server()
 
     try:
