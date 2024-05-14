@@ -1,0 +1,138 @@
+import sys
+import pygame
+
+rozliseni_okna = (1000, 800)
+okno = pygame.display.set_mode(rozliseni_okna)
+
+x1 = 490
+y1 = 390
+
+rychlost_hrace = 0.7
+
+x_honiciho_nepritele = 30
+y_honiciho_nepritele = 30
+
+rychlost_honiciho_nepritele = 0.25
+
+x_nepritele_1 = 20
+y_nepritele_1 = 200
+
+pohyb_nepritele_1 = 0.5
+
+x_nepritele_2 = 20
+y_nepritele_2 = 450
+
+pohyb_nepritele_2 = 1.2
+
+x_nepritele_3 = 20
+y_nepritele_3 = 620
+
+pohyb_nepritele_3 = 1.7
+
+x_nepritele_4 = 240
+y_nepritele_4 = 20
+
+pohyb_nepritele_4 = 1.5
+
+x_nepritele_5 = 530
+y_nepritele_5 = 20
+
+pohyb_nepritele_5 = 1
+
+x_nepritele_6 = 780
+y_nepritele_6 = 20
+
+pohyb_nepritele_6 = 0.75
+
+while True:
+    for udalost in pygame.event.get():  
+        if udalost.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+    
+    stisknute_klavesy = pygame.key.get_pressed()
+            
+    if stisknute_klavesy[pygame.K_RIGHT]: 
+        x1 += rychlost_hrace
+    if stisknute_klavesy[pygame.K_LEFT]: 
+        x1 -= rychlost_hrace 
+    if stisknute_klavesy[pygame.K_UP]: 
+        y1 -= rychlost_hrace 
+    if stisknute_klavesy[pygame.K_DOWN]: 
+        y1 += rychlost_hrace
+            
+    okno.fill((255, 255, 255))
+    
+    hrac = pygame.draw.rect(okno, (0, 0, 0), (x1, y1, 20, 20))
+    
+    zed1 = pygame.draw.rect(okno, (0, 0, 0), (0, 0, 1000, 20))
+    zed1 = pygame.draw.rect(okno, (0, 0, 0), (0, 0, 20, 800))
+    zed1 = pygame.draw.rect(okno, (0, 0, 0), (980, 0, 20, 800))
+    zed1 = pygame.draw.rect(okno, (0, 0, 0), (0, 780, 1000, 20))
+    
+    honici_nepritel = pygame.draw.ellipse(okno, (0, 0, 0), (x_honiciho_nepritele, y_honiciho_nepritele, 20, 20))
+    
+    
+    
+    
+    
+    behaci_nepritel_1 = pygame.draw.rect(okno, (0, 0, 0), (x_nepritele_1, y_nepritele_1, 50, 30))
+    x_nepritele_1 += pohyb_nepritele_1
+    if x_nepritele_1 > 950:
+        pohyb_nepritele_1 *= -1
+    if x_nepritele_1 < 0:
+        pohyb_nepritele_1 *= -1
+        
+    behaci_nepritel_2 = pygame.draw.rect(okno, (0, 0, 0), (x_nepritele_2, y_nepritele_2, 50, 30))
+    x_nepritele_2 += pohyb_nepritele_2
+    if x_nepritele_2 > 950:
+        pohyb_nepritele_2 *= -1
+    if x_nepritele_2 < 0:
+        pohyb_nepritele_2 *= -1
+    
+    behaci_nepritel_3 = pygame.draw.rect(okno, (0, 0, 0), (x_nepritele_3, y_nepritele_3, 50, 30))
+    x_nepritele_3 += pohyb_nepritele_3
+    if x_nepritele_3 > 950:
+        pohyb_nepritele_3 *= -1
+    if x_nepritele_3 < 0:
+        pohyb_nepritele_3 *= -1
+        
+    behaci_nepritel_4 = pygame.draw.rect(okno, (0, 0, 0), (x_nepritele_4, y_nepritele_4, 30, 50))
+    y_nepritele_4 += pohyb_nepritele_4
+    if y_nepritele_4 > 750:
+        pohyb_nepritele_4 *= -1
+    if y_nepritele_4 < 0:
+        pohyb_nepritele_4 *= -1
+        
+    behaci_nepritel_5 = pygame.draw.rect(okno, (0, 0, 0), (x_nepritele_5, y_nepritele_5, 30, 50))
+    y_nepritele_5 += pohyb_nepritele_5
+    if y_nepritele_5 > 750:
+        pohyb_nepritele_5 *= -1
+    if y_nepritele_5 < 0:
+        pohyb_nepritele_5 *= -1
+        
+    behaci_nepritel_6 = pygame.draw.rect(okno, (0, 0, 0), (x_nepritele_6, y_nepritele_6, 30, 50))
+    y_nepritele_6 += pohyb_nepritele_6
+    if y_nepritele_6 > 750:
+        pohyb_nepritele_6 *= -1
+    if y_nepritele_6 < 0:
+        pohyb_nepritele_6 *= -1
+    
+    nepritel_1 = pygame.draw.ellipse(okno, (0, 0, 0), (100, 95, 70, 70))
+    nepritel_2 = pygame.draw.ellipse(okno, (0, 0, 0), (150, 600, 20, 20))
+    nepritel_3 = pygame.draw.ellipse(okno, (0, 0, 0), (650, 300, 40, 40))
+    nepritel_4 = pygame.draw.ellipse(okno, (0, 0, 0), (350, 220, 45, 45))
+    nepritel_5 = pygame.draw.ellipse(okno, (0, 0, 0), (880, 180, 20, 20))
+    nepritel_6 = pygame.draw.ellipse(okno, (0, 0, 0), (350, 490, 100, 100))
+    nepritel_7 = pygame.draw.ellipse(okno, (0, 0, 0), (100, 350, 80, 80))
+    nepritel_8 = pygame.draw.ellipse(okno, (0, 0, 0), (750, 650, 70, 70))
+    nepritel_9 = pygame.draw.ellipse(okno, (0, 0, 0), (500, 300, 60, 60))
+    nepritel_10 = pygame.draw.ellipse(okno, (0, 0, 0), (550, 50, 200, 200))
+    nepritel_11 = pygame.draw.ellipse(okno, (0, 0, 0), (350, 50, 50, 50))
+    nepritel_12 = pygame.draw.ellipse(okno, (0, 0, 0), (550, 500, 130, 130))
+    nepritel_13 = pygame.draw.ellipse(okno, (0, 0, 0), (850, 430, 65, 65))
+    nepritel_14 = pygame.draw.ellipse(okno, (0, 0, 0), (320, 650, 60, 60))
+    nepritel_15 = pygame.draw.ellipse(okno, (0, 0, 0), (280, 370, 70, 70))
+    
+    
+    pygame.display.update()

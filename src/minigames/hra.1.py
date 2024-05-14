@@ -19,8 +19,8 @@ nep6_x = 30
 speed1 = 1
 speed2 = 1.5
 speed3 = 2
-speed4 = 2
-speed5 = 1.5
+speed4 = 1.5
+speed5 = 2
 speed6 = 1
 
 while True:
