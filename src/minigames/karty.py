@@ -21,6 +21,7 @@ class Component:
     def __init__(self, name, category):
         self.name = name
         self.category = category
+        self.position = 'hand'
     
     def draw(self, x, y, offset=0):
         pygame.draw.rect(screen, LIGHT_BLUE, [x + offset, y + offset, 70, 100], 0)
