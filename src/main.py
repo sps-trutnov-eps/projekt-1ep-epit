@@ -40,7 +40,7 @@ def set_result_info(result: list):
     global result_info
     result_info = result
 
-def lobby(screen: pg.Surface) -> int:
+def lobby(screen: pygame.Surface) -> int:
     while True:
         netcode.client_sync()
         
@@ -52,12 +52,12 @@ def lobby(screen: pg.Surface) -> int:
 
         host_start_button = (150, 600, 200, 50)
 
-        for event in pg.event.get():
+        for event in pygame.event.get():
             if (event.type == QUIT or
                 (event.type == KEYDOWN and event.key == K_ESCAPE)):
                 exit(0)
             
-            elif event.type == pg.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if common.is_click_on_ui(host_start_button, event):
                     netcode.start_game()
 
@@ -70,17 +70,17 @@ def lobby(screen: pg.Surface) -> int:
 
         # TODO: draw lobby info
 
-        pg.draw.rect(screen, (127, 127, 127), host_start_button)
+        pygame.draw.rect(screen, (127, 127, 127), host_start_button)
         common.game_font.render_to(screen, common.center_in_rect(host_start_button, common.game_font.get_rect("Start game")), "Start game", (255, 255, 255))
 
-        pg.display.update()
+        pygame.display.update()
 
 # == level ==
 
-def level(screen: pg.Surface) -> int:
+def level(screen: pygame.Surface) -> int:
     """Level function."""
-    clock = pg.time.Clock()
-    sprites = pg.sprite.Group()
+    clock = pygame.time.Clock()
+    sprites = pygame.sprite.Group()
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -165,9 +165,8 @@ def main() -> None:
     """Main function."""
     screen = init_game()
     lobby(screen)
-    # netcode.setup_netcode(("127.0.0.1", 15533), "player #1")
 
-    netcode.setup_netcode(("127.0.0.1", 15533), "player #1", True, (set_lobby_info, set_result_info))
+    # netcode.setup_netcode(("127.0.0.1", 15533), "player #1", True, (set_lobby_info, set_result_info))
 
     # simple scene switcher, lobby or level return the index of the next scene (None = exit)
     
@@ -181,3 +180,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+    exit(0)
