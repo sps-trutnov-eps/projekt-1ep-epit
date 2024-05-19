@@ -14,10 +14,17 @@ from typing import Callable
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 10
+protocol_version = 11
 packet_len_bytes = 2
 
 # == client state ==
+
+# an netcode specific exception which triggers the dc_screen in main.py
+class GameDisconnect(Exception):
+    what: str
+
+    def __init__(self, what: str) -> None:
+        self.what = what
 
 class ClientState:
     __slots__ = ["server_conn", "player_name", "remote_player_states", "on_lobby_info", "game_state", "is_host", "on_game_result"]
@@ -47,7 +54,7 @@ class ClientState:
     on_lobby_info: Callable
     on_game_result: Callable
 
-    # TODO?: should be checked on server but nvm 
+    # note: a random player can become a host when the current host disconnects (aka this value can change)
     is_host: bool
 
 client_state: ClientState
@@ -87,7 +94,7 @@ def read_packet(sock: socket.socket) -> list:
 # TODO: player events (eg. game ended) <- must be able to affect minigames
 
 # called once per client frame to sync with server
-def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None]:
+def client_sync(watch_for_lock_response: bool = False) -> bool | None:
     # == parse server packets (if any) ==
 
     packets = []
@@ -105,9 +112,9 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
                 packets.append(read_packet(sock))
 
             except TimeoutError:
-                return (True, None) # no server packets
+                return # no server packets
             except ConnectionError:
-                return (False, "Stráta spojení se serverem.")
+                raise GameDisconnect("Connection with server interupted.")
 
     # == process received packets ==
 
@@ -123,20 +130,28 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
 
             # lobby events
             if event_type == "game_start":
+                # game started, load main map
+
                 client_state.game_state = 1
                 print("game start")
             
             elif event_type == "game_end":
+                # game ended, load lobby and display results
+
                 client_state.game_state = 0
                 client_state.on_game_result(packet[2])
                 print("game end")
 
             elif event_type == "lobby_update":
+                # the lobby data has changed (client connects/disconnects, team/skin changes)
+
                 client_state.on_lobby_info(packet[2])
 
-            # game events
-            elif event_type == "score_update":
-                pass
+            elif event_type == "client_update":
+                # client state changed (only is_host flag for now)
+
+                client_state.is_host = packet[2]
+                print("client: became game host")
         
         elif packet[0] == "s_lock_response":
             if not watch_for_lock_response:
@@ -148,66 +163,67 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
         elif packet[0] == "pong":
             print(packet)
         
-        elif packet[0] == "server_quit":
+        elif packet[0] == "s_server_quit":
             if not client_state.is_host:
-                exit(-1) # server shutdown 
+                exit(-1) # server shutdown
+        
+        elif packet[0] == "s_unexpected_packet":
+            raise GameDisconnect("Internal communication error... (spam the devs to punish them)")
 
     # handle/queue game state changes
 
     # send_packet(client_state.server_conn, ("ping", threading.current_thread().getName()))
     
     if not lock_response == None:
-        return (lock_response, "lr")
-
-    return (True, None)
+        return lock_response
 
 # locks a server-side lock, returns True if locked (and the lock was free) or False if the lock was already locked
 # remember to `remote_unlock` after the lock is not needed, otherwise the lock will be locked forever
 # note: this def is fully synchronous and *very* slow, never do it in every frame (only loading screens and such)
 def remote_try_lock(lock_name: str) -> bool:
-    send_packet(client_state.server_conn, ("lock_acquire", lock_name))
+    send_packet(client_state.server_conn, ("c_lock_acquire", lock_name))
 
     while True:
         res = client_sync(True)
 
-        if res[1] == "lr":
-            return res[0]
+        if not res == None:
+            return res
 
 # unlocks the lock so other clients can lock the lock
 def remote_unlock(lock_name: str):
-    send_packet(client_state.server_conn, ("lock_release", lock_name))
+    send_packet(client_state.server_conn, ("c_lock_release", lock_name))
 
 # start game (only as host)
 def start_game():
     if not client_state.is_host:
         raise ValueError("client is not host!")
     
-    send_packet(client_state.server_conn, ("host_game_start",))
+    send_packet(client_state.server_conn, ("c_host_game_start",))
 
 def change_team(index: int):
     if not client_state.game_state == 0:
         raise ValueError("player can only change teams if in lobby, not in game!") # can be changed if we allow changing teams while in-game
 
-    send_packet(client_state.server_conn, ("change_team", index))
+    send_packet(client_state.server_conn, ("c_change_team", index))
 
-# note: called by the server!!!
+# note: called only by the server!!!
 def game_end():
     server_state.game_state = 0
     
     print("server: ending game...")
 
-def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks: list) -> tuple[bool, str | None]:
+def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks: tuple) -> tuple[bool, str | None]:
     # setup client state and connection
 
     try:
         global client_state
         client_state = ClientState(uri, player_name, is_host, client_hooks)
     except ConnectionError:
-        return (False, "Server odmíta připojení.")
+        return (False, "Connection refused by server.")
 
     # init client with the server
     try:
-        send_packet(client_state.server_conn, ("p_init", player_name, protocol_version, is_host))
+        send_packet(client_state.server_conn, ("c_init", player_name, protocol_version, is_host))
 
         # await server response
         response = read_packet(client_state.server_conn)
@@ -221,25 +237,25 @@ def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks:
             return (True, None)
         else:
             if response[0] == "s_init_name_taken":
-                return (False, "Server: Jméno hráče je už zabrané.")
+                return (False, "Player name is already taken.")
 
             elif response[0] == "s_init_match_running":
-                return (False, "Server: Hra už byla hostujícím spuštěna.")
+                return (False, "Match has already started, wait for it to end.")
 
             elif response[0] == "s_unexpected_packet":
-                return (False, "Server: Interní chyba komunikace...")
+                return (False, "Internal communication error... (spam the devs to punish them)")
             
             elif response[0] == "s_version_mismatch":
-                return (False, "Verze Hry Hráče a Serveru se liší.")
+                return (False, "Version mismatch between client and server.")
 
             else:
                 raise ValueError("client netcode: unhandled server response type") 
 
     except TimeoutError:
-        return (False, "Timeout při připojování k serveru.")
+        return (False, "Connection timeout.")
 
     except ConnectionError:
-        return (False, "Spojení se serverem přerušeno.")
+        return (False, "Connection with server interupted.")
 
 def disconnect_as_client():
     try:
@@ -275,7 +291,7 @@ class ServerState:
 
     # used to detect lobby changes between clients
     def hash_lobby(self) -> bytes:
-        return hashlib.md5(json.dumps(self.lobby).encode('utf-8')).digest()
+        return hashlib.sha1(json.dumps(self.lobby).encode('utf-8'), usedforsecurity=False).digest()
 
     server_tick_thread: threading.Thread
     server: socketserver.ThreadingTCPServer
@@ -286,8 +302,8 @@ class ServerState:
     lobby_players: dict[str, list[int]]
     host_players: set[str]
 
-    # in-game data
-    player_info: dict
+    # in-game data (dict indexed by player_name containing [position, velocity]
+    player_info: dict[str, list]
     game_state: int
 
 server_state: ServerState
@@ -299,20 +315,17 @@ def server_handle_disconnect(player):
     print(f"server: client {player} disconnected")
 
     server_state.lobby.pop(player)
-
     server_state.host_players.discard(player)
-    if len(server_state.host_players) == 0 and len(server_state.lobby) != 0:
-        server_state.host_players.add(server_state.lobby[0][0])
 
-def server_handle_connect(req: socket.socket) -> str | None:
+def server_handle_connect(req: socket.socket) -> list | None:
     try:
         init_packet = read_packet(req)
     except:
         print("server: new client<->server connection failed while initing client")
         raise
 
-    if not init_packet[0] == "p_init":
-        print("server: refused new connection due to protocol error!")
+    if not init_packet[0] == "c_init":
+        print("server: refused new connection due to faulty client init! (this should never happen if running vanilla EPIT)")
 
         send_packet(req, ("s_unexpected_packet",))
         return
@@ -339,7 +352,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         init_packet = server_handle_connect(self.request)
 
         if init_packet == None:
-            return
+            return # failed to init with client
 
         # init client handler
 
@@ -349,18 +362,25 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         client_lobby_hash = server_state.hash_lobby()
         client_game_state = server_state.game_state
 
-        if init_packet[3] or len(server_state.host_players) == 0: # always at least one person must be "host" player
-            server_state.host_players.add(init_packet[1])
+        if init_packet[3]:
+            server_state.host_players.add(player_name)
 
         send_packet(self.request, ("s_init_success", server_state.lobby, client_game_state, player_name in server_state.host_players))
 
         print(f"server: client {player_name} connected!")
 
-        # start client io loop
+        # client io loop
         while True:
-            try:
-                # check for received client packets
+            # update client handler
 
+            if len(server_state.host_players) == 0: # always at least one person must be "host" player
+                server_state.host_players.add(player_name)
+
+                # inform client that it has become host
+                send_packet(self.request, ("s_game_event", "client_update", True))
+
+            # check for received client packets
+            try:
                 packets = []
 
                 while True:
@@ -377,7 +397,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 # == process client packets ==
 
                 for packet in packets:
-                    if packet[0] == "lock_acquire":
+                    if packet[0] == "c_lock_acquire":
                         lock = server_state.remote_locks.get(packet[1])
 
                         if lock == None:
@@ -390,12 +410,12 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
                         send_packet(self.request, ("s_lock_response", did_acquire))
                     
-                    elif packet[0] == "lock_release":
+                    elif packet[0] == "c_lock_release":
                         server_state.remote_locks[packet[1]].release()
 
                     # host packets
 
-                    elif packet[0] == "host_game_start":
+                    elif packet[0] == "c_host_game_start":
                         if not player_name in server_state.host_players:
                             continue # player is not host
 
@@ -407,7 +427,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                         server_state.server_tick_thread = threading.Thread(target=game_end)
                         server_state.server_tick_thread.start()
 
-                    elif packet[0] == "host_server_quit":
+                    elif packet[0] == "c_host_server_quit":
                         if not player_name in server_state.host_players:
                             continue # player is not host
 
@@ -418,11 +438,14 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
                     # lobby packets
 
-                    elif packet[0] == "change_team":
+                    elif packet[0] == "c_change_team":
                         server_state.lobby[player_name][0] = packet[1]
 
                     elif packet[0] == "ping":
                         send_packet(self.request, ("pong",*packet))
+                    
+                    else:
+                        send_packet(self.request, ("s_unexpected_packet",))
 
             except ConnectionError:
                 server_handle_disconnect(player_name)
@@ -434,8 +457,8 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
             # player updates (position, held item, etc.)
 
-            for p in server_state.player_info:
-                game_tick[1][p.name] = (p.pos, p.delayed_pos, p.held_item, p.health)
+            for name, p in server_state.player_info.items():
+                game_tick[1][name] = (p[0], p[1])
             
             # game score
 
@@ -444,7 +467,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
             # check for changed synced data
 
             if server_state.is_shuting_down:
-                send_packet(self.request, ("server_quit",))
+                send_packet(self.request, ("s_server_quit",))
                 return
 
             if not client_game_state == server_state.game_state:
@@ -487,13 +510,19 @@ def terminate_server():
 
 # == netcode api ==
 
-def setup_netcode(addr, player_name: str, is_host: bool, client_hooks: list):
+# not to confuse with client_state.is_host, this signals if server_process is running under this client
+is_hosting: bool = False
+
+def setup_netcode(addr, player_name: str, is_host: bool, client_hooks: tuple):
     global server_process
+    global is_hosting
+    is_hosting = is_host
 
     atexit.register(quit_netcode)
     
-    if is_host:
+    if is_hosting:
         server_process = subprocess.Popen(("python", "./src/netcode.py"))
+        time.sleep(.2) # wait for server to start
     
     print("client: connecting to server...")
     result = connect_as_client(addr, player_name, is_host, client_hooks)
@@ -501,17 +530,16 @@ def setup_netcode(addr, player_name: str, is_host: bool, client_hooks: list):
     if result[0]:
         print(f"client: connected as {client_state.player_name}!")
     else:
-        print(f"failed to connect: {result[1]}")
-        exit(-1)
+        raise GameDisconnect(result[1])
 
 # handles netcode clean up at exit
 def quit_netcode():
-    if client_state.is_host:
+    if is_hosting:
         send_packet(client_state.server_conn, ("host_server_quit",))
 
     disconnect_as_client()
 
-    if client_state.is_host:
+    if is_hosting:
         # if i try to server.shutdown() everything deadlocks so..
 
         print("server: shuting down server...")
