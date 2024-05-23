@@ -17,6 +17,9 @@ x2 = 1374
 y2 = 0
 x3 = 1187
 y3 = 1020
+x4 = 2674
+x5 = 2490
+
 
 file_path = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (3).png")
 file_path2 = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (5).png")
@@ -31,7 +34,7 @@ except Exception as e:
 print("Images loaded successfully.")
 def handle_events() -> bool:
     """Events handling function."""
-    global x, y, x1, y1, x2, x3 ,y2, y3
+    global x, y, x1, y1, x2, x3 ,y2, y3, x4, x5
     keys = pg.key.get_pressed()
     if keys[pg.K_w]:
         y += 20
@@ -48,11 +51,15 @@ def handle_events() -> bool:
         x1 += 20
         x2 += 20
         x3 += 20
+        x4 += 20
+        x5 += 20
     if keys[pg.K_d]:
         x -= 20
         x1 -= 20
         x2 -= 20
         x3 -= 20
+        x4 -= 20
+        x5 -= 20
     for event in pg.event.get():
         if (event.type == QUIT or
             (event.type == KEYDOWN and event.key == K_ESCAPE)):
@@ -80,6 +87,9 @@ def draw_walls():
         pg.draw.rect(screen, (255, 255, 255), (x2, y2, 95, 1114))
         pg.draw.rect(screen, (255, 255, 255), (x, y3, 910, 95))
         pg.draw.rect(screen, (255, 255, 255), (x3, y3, 1025, 95))
+        pg.draw.rect(screen, (255, 255, 255), (x4, y2, 95, 1114))
+        pg.draw.rect(screen, (255, 255, 255), (x5, y3, 469, 95))
+
 
 def init_game() -> pg.Surface:
     global screen
