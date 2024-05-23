@@ -125,6 +125,7 @@ def map_level(screen: pygame.Surface, team: int, score: int = 0) -> None:
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 return None
+        netcode.send_packet(client_state.server_conn, (land, player_name, protocol_version))
         update_sprites(sprites, screen, team)
         clock.tick(60)
     
