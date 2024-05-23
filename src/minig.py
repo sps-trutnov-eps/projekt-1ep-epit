@@ -28,6 +28,7 @@ def switch_to_minigame(name, screen: pygame.Surface):
 
     elif result.did_win == False: # win
         netcode.send_packet(client_state.server_conn, (str(score + 100), player_name, protocol_version))
+        netcode.send_packet(client_state.server_conn, (str(land), player_name, protocol_version))
 
     elif result.did_win == True: # fail
-        netcode.send_packet(client_state.server_conn, (str(score), player_name, protocol_version))
+        pass
