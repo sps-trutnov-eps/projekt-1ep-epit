@@ -14,7 +14,6 @@ while True:
         if udalost.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-    stisknute_klavesy = pygame.key.get_pressed()
     
     nahodny=random.randint(1,200)
     if nahodny==1:

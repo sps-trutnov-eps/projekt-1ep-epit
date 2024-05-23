@@ -39,7 +39,6 @@ while True:
                         napsano2=napsano2+str(udalost.unicode)
                     if len(napsano)<3:
                         napsano=napsano+str(udalost.unicode)
-    stisknute_klavesy = pygame.key.get_pressed()
     if timer==0:
         okno.blit(text1, (315,100))
         okno.blit(text2, (315,200))
