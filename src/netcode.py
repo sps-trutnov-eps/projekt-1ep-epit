@@ -8,6 +8,7 @@ import json
 import threading
 import subprocess
 import hashlib
+import os
 
 import time
 from typing import Callable
@@ -521,7 +522,7 @@ def setup_netcode(addr, player_name: str, is_host: bool, client_hooks: tuple):
     atexit.register(quit_netcode)
     
     if is_hosting:
-        server_process = subprocess.Popen(("python", "./src/netcode.py"))
+        server_process = subprocess.Popen(("python", os.path.realpath(__file__)))
         time.sleep(.2) # wait for server to start
     
     print("client: connecting to server...")
