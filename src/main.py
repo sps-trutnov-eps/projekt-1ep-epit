@@ -18,9 +18,7 @@ file_path = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (3).png")
 file_path2 = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (5).png")
 try:
     obrazek = pg.image.load(file_path)
-    obrazek = pg.transform.scale(obrazek, (4650, 3720))  # Resize the player image
     obrazekP = pg.image.load(file_path2)
-    obrazekP = pg.transform.scale(obrazekP, (50, 50))  # Resize the image P
 except Exception as e:
     print(f"Error loading images: {e}")
     pg.quit()
