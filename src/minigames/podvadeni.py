@@ -12,7 +12,8 @@ def podvadeni():
     teacher_looking = False
     teacher_time = random.randint(0, 10)
     teacher_timer = 0
-    teacher_set = False 
+    teacher_set = False
+    warning_movement = 1
     
     backdrop = pygame.Rect(0, 0, 1280, 960)
     
@@ -55,6 +56,12 @@ def podvadeni():
             teacher_set = True 
         if teacher_set:
             teacher_timer -= 1
+        if teacher_timer <= 60:
+            if 
+        else:
+            teacher_warning.left = -250
+        
+        teacher_warning.top -= 5
         if teacher_timer <= 0:
             teacher_looking = True 
         if teacher_looking and stisknute_klavesy[pygame.K_SPACE]:
