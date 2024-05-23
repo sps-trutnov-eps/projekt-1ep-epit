@@ -1,19 +1,23 @@
 import pygame as pg
+from pygame import K_ESCAPE, KEYDOWN, QUIT
 import os
-from pygame.locals import *
 
-# Screen settings
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
 
-# Colors
-BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+x = 0
+y = 0
+xp = 500
+yp = 0
+x1 = 4070
+y1 = 0
+x2 = 1374
+y2 = 0
+x3 = 1187
+y3 = 1020
 
-# Initialize Pygame
-pg.init()
-
-# Load images and resize player image
 file_path = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (3).png")
 file_path2 = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (5).png")
 try:
@@ -25,91 +29,74 @@ except Exception as e:
     exit(1)
 
 print("Images loaded successfully.")
-
-# Define map size
-MAP_WIDTH = 2000
-MAP_HEIGHT = 1500
-
-# Define player size
-PLAYER_WIDTH, PLAYER_HEIGHT = obrazek.get_size()
-
-# Define initial player position
-player_x = (SCREEN_WIDTH - PLAYER_WIDTH) // 2
-player_y = (SCREEN_HEIGHT - PLAYER_HEIGHT) // 2
-
-# Define initial map offset
-map_offset_x = 0
-map_offset_y = 0
-
-# Define scroll speed
-SCROLL_SPEED = 5
-
-# Define blocked areas (walls)
-blocked_areas = [
-    pg.Rect(100, 100, 200, 30),   # First wall
-    pg.Rect(400, 300, 150, 25),   # Second wall
-    # Add more walls as needed
-]
-
 def handle_events() -> bool:
-    global player_x, player_y, map_offset_x, map_offset_y
-
-    for event in pg.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            return False
-
+    """Events handling function."""
+    global x, y, x1, y1, x2, x3 ,y2, y3
     keys = pg.key.get_pressed()
     if keys[pg.K_w]:
-        player_y -= SCROLL_SPEED
-        if player_y < 0:
-            player_y = 0
-        map_offset_y += SCROLL_SPEED
+        y += 20
+        y1 += 20
+        y2 += 20
+        y3 += 20
     if keys[pg.K_s]:
-        player_y += SCROLL_SPEED
-        if player_y > SCREEN_HEIGHT - PLAYER_HEIGHT:
-            player_y = SCREEN_HEIGHT - PLAYER_HEIGHT
-        map_offset_y -= SCROLL_SPEED
+        y -= 20
+        y1 -= 20
+        y2 -= 20
+        y3 -= 20
     if keys[pg.K_a]:
-        player_x -= SCROLL_SPEED
-        if player_x < 0:
-            player_x = 0
-        map_offset_x += SCROLL_SPEED
+        x += 20
+        x1 += 20
+        x2 += 20
+        x3 += 20
     if keys[pg.K_d]:
-        player_x += SCROLL_SPEED
-        if player_x > SCREEN_WIDTH - PLAYER_WIDTH:
-            player_x = SCREEN_WIDTH - PLAYER_WIDTH
-        map_offset_x -= SCROLL_SPEED
-
-    # Clamp map offset to stay within map bounds
-    map_offset_x = max(min(map_offset_x, MAP_WIDTH - SCREEN_WIDTH), 0)
-    map_offset_y = max(min(map_offset_y, MAP_HEIGHT - SCREEN_HEIGHT), 0)
-
+        x -= 20
+        x1 -= 20
+        x2 -= 20
+        x3 -= 20
+    for event in pg.event.get():
+        if (event.type == QUIT or
+            (event.type == KEYDOWN and event.key == K_ESCAPE)):
+            return False
     return True
 
 def level(screen: pg.Surface) -> None:
+    """Level function."""
     clock = pg.time.Clock()
+    sprites = pg.sprite.Group()
+
     while handle_events():
+        sprites.update()
         screen.fill(BLACK)
-        # Draw map background (just a white rectangle for now)
-        pg.draw.rect(screen, WHITE, (0, 0, MAP_WIDTH, MAP_HEIGHT))
-        # Draw blocked areas (walls)
-        for wall in blocked_areas:
-            pg.draw.rect(screen, BLACK, wall.move(-map_offset_x, -map_offset_y))
-        # Draw player and image P
-        screen.blit(obrazek, (player_x, player_y))
-        screen.blit(obrazekP, (SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT // 2 - PLAYER_HEIGHT // 2))
+        sprites.draw(screen)
+        screen.blit(obrazek, (x, y))
+        screen.blit(obrazekP, (xp, yp))
+        draw_walls()
         pg.display.update()
-        clock.tick(60)
+        clock.tick(100)
+def draw_walls():
+        pg.draw.rect(screen, (255, 255, 255), (x, y, 73, 3000))
+        pg.draw.rect(screen, (255, 255, 255), (x, y, 4200, 90))
+        pg.draw.rect(screen, (255, 255, 255), (x1, y1, 95, 2000))
+        pg.draw.rect(screen, (255, 255, 255), (x2, y2, 95, 1114))
+        pg.draw.rect(screen, (255, 255, 255), (x, y3, 910, 95))
+        pg.draw.rect(screen, (255, 255, 255), (x3, y3, 1025, 95))
 
 def init_game() -> pg.Surface:
+    global screen
+    """Pygame init function."""
+    pg.init()
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pg.display.set_caption('Game')
+    
     return screen
 
-def main() -> None:
+def main(scene_id: int = 0) -> None:
+    """Main function."""
     screen = init_game()
+
+    
     level(screen)
-    pg.quit()
 
 if __name__ == '__main__':
     main()
+    pg.quit()
