@@ -149,7 +149,7 @@ def client_sync(watch_for_lock_response: bool = False) -> tuple[bool, str | None
         
         elif packet[0] == "server_quit":
             if not client_state.is_host:
-                exit(-1) # server shutdown 
+                exit(-1) # server shutdown
 
     # handle/queue game state changes
 
@@ -271,6 +271,10 @@ class ServerState:
 
         self.player_info = {}
         self.game_state = 0
+        self.score_ep = 0
+        self.score_it = 0
+        self.land_ep = ["T10"]
+        self.land_it = ["T7"]
 
     server_tick_thread: threading.Thread
     server: socketserver.ThreadingTCPServer
@@ -282,6 +286,10 @@ class ServerState:
     host_players: set[str]
 
     # in-game data
+    score_ep: int
+    score_it: int
+    land_ep: dict
+    land_it: dict
     player_info: dict
     game_state: int
 
@@ -420,6 +428,14 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     elif packet[0] == "ping":
                         send_packet(self.request, ("pong",*packet))
 
+                    # score packets
+                    
+                    elif packet[0] == "land_ep":
+                        server_state.land_ep = packet[1]
+
+                    elif packet[0] == "land_it":
+                        server_state.land_it = packet[1]
+
             except ConnectionError:
                 server_handle_disconnect(player_name)
                 return
@@ -434,8 +450,10 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 game_tick[1][p.name] = (p.pos, p.delayed_pos, p.held_item, p.health)
             
             # game score
+            # TODO: Pavel, send to clients what you want
 
-            game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+            game_tick[2]["game_score_ep"] = (server_state.score_ep + len(server_state.land_ep))
+            game_tick[2]["game_score_it"] = (server_state.score_it + len(server_state.land_it))
 
             # check for changed synced data
 
