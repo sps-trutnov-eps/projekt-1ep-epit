@@ -18,6 +18,7 @@ def podvadeni():
     
     player = pygame.Rect(1100, 460, 100, 100)
     teacher = pygame.Rect(100, 360, 100, 150)
+    teacher_warning = pygame.Rect(250, 250, 50, 100)
     clock = pygame.time.Clock()
     while True:
         for event in pygame.event.get():
@@ -54,15 +55,18 @@ def podvadeni():
             teacher_set = True 
         if teacher_set:
             teacher_timer -= 1
+        if teacher_timer <= 0:
+            teacher_looking = True 
         if teacher_looking and stisknute_klavesy[pygame.K_SPACE]:
             return mini.fail_minigame()
-
+        
         # zavolej tuto funkci každý frame (kvůli ostatním věcem jako multiplayer)
         mini.mini_frame()
         
         pygame.draw.rect(mini.mini_surface, (255, 255, 255), backdrop)
         pygame.draw.rect(mini.mini_surface, (0, 0, 0), player)
-        pygame.draw.rect(mini.mini_surface, (255, 0, 0), teacher)
+        pygame.draw.rect(mini.mini_surface, (200, 0, 0), teacher)
+        pygame.draw.rect(mini.mini_surface, (255, 0, 0), teacher_warning)
         pygame.draw.rect(mini.mini_surface, (70, 0, 0), completion_meter)
         pygame.draw.rect(mini.mini_surface, (180, 0, 0), completion)
         pygame.draw.rect(mini.mini_surface, (0, 0, 70), timer)
