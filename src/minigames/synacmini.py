@@ -29,39 +29,49 @@ question_asked = False
 # Definice seznamu otázek s možnostmi a správnými odpověďmi
 questions = [
     {
-        "question": "Jaké jsou praktické aplikace Newtonova třetího zákona pohybu?",
-        "options": ["A. Gravitace je odpovědná za pohyb planet", "B. Síla tření je nezávislá na hmotnosti tělesa", "C. Objekty se pohybují, když na ně působí menší síla", "D. Pohybující se těleso vyvolává opačnou reakci na jiné těleso"],
+        "question": "Kdo vstřelil zlatý gól na MS v hokeji 2024?",
+        "options": ["A. Roman Červenka", "B. Lukáš Sedlák", "C. Dominik Kubalík", "D. David Pastrňák"],
         "correct_answer": "D"
     },
     {
-        "question": "Jaká je hlavní tématická linka v románech Karla Čapka?",
-        "options": ["A. Kritika moderní společnosti", "B. Láska a vášeň", "C. Hledání identity postav", "D. Obrana před mimozemským útokem"],
+        "question": "Kdo byl vyhlášen brankářem MS v hokeji 2024?",
+        "options": ["A. Lukáš Dostál", "B. Alex Lyon", "C. Emil Larmi", "D. Eriks Vitols"],
         "correct_answer": "A"
     },
     {
-        "question": "Jaká je definice obsahu obvodu čtverce?",
-        "options": ["A. Obvod je roven dvojnásobku obsahu", "B. Obvod je roven čtyřnásobku jedné délky", "C. Obvod je roven odmocnině součtu délek všech stran", "D. Obvod je roven součtu délek všech stran umocněných na druhou"],
+        "question": "Kdo byl vyhlášen obráncem MS v hokeji 2024?",
+        "options": ["A. Roman Josi", "B. Owen Power", "C. Lukas Kälble", "D. Oliwer Kaski"],
+        "correct_answer": "A"
+    },
+    {
+        "question": "Kdo byl vyhlášen útočníkem MS v hokeji 2024?",
+        "options": ["A. Roman Červenka", "B. Kevin Fiala", "C. Libor Hudáček", "D. JJ Peterka"],
         "correct_answer": "B"
     },
     {
-        "question": "Co je to procesor a jak funguje?",
-        "options": ["A. Paměťové zařízení", "B. Zařízení pro přenos dat", "C. Centrální procesní jednotka, která provádí instrukce programu", "D. Zobrazovací jednotka monitoru"],
+        "question": "Kteří tři hráčí, kteří nebyli vyhlášeni hráči MS v hokeji 2024 na své pozici byli vybrání do All-Star týmu MS v hokeji 2024?",
+        "options": ["A. Erik Karlsson, Dylan Cozens a Roman Červenka", "B. Owen Power, Roman Červenka a Matt Boldy", "C. Oliwer Kaski, Roman Červenka a Dylan Cozens", "D. Lukas Kälble, Evan Mosey a Matt Boldy"],
+        "correct_answer": "A"
+    },
+    {
+        "question": "Kdo měl nejlepší úspěšnost na vhazování na MS v hokeji 2024?",
+        "options": ["A. Nick Paul", "B. Kevin Hayes", "C. John Tavares", "D. Nico Hischier"],
         "correct_answer": "C"
     },
     {
-        "question": "Jaké jsou hlavní složky vzduchu a jejich vliv na životní prostředí?",
-        "options": ["A. Kyslík, dusík, vodní pára; podporuje život na Zemi", "B. Kyslík, argon, oxid uhličitý; znečišťuje ovzduší", "C. Vodík, metan, ozón; podporuje ozónovou díru", "D. Oxid uhličitý, ozón, dusičnany; negativně ovlivňuje kvalitu ovzduší"],
+        "question": "Jaký brankář byl vyhlášen brankářem s nejmenpším počtem obdržených gólů na zápas?",
+        "options": ["A. Leonardo Genoni", "B. Trey Augustine", "C. Samuel Hlavaj", "D. Emil Larmi"],
         "correct_answer": "A"
     },
     {
-        "question": "Jaký je vztah mezi poloměrem a obvodem kruhu?",
-        "options": ["A. Obvod je roven součinu poloměru a čísla π", "B. Obvod je roven součtu poloměru a čísla π", "C. Poloměr je roven součinu obvodu a čísla π", "D. Poloměr je roven podílu obvodu a čísla π"],
-        "correct_answer": "D"
+        "question": "Jaký hráč byl vyhlášen jako nejlepší ve statistice +/-?",
+        "options": ["A. Marcus Johansson", "B. Michael Bunting", "C. Colton Parayko", "D. Erik Karlsson"],
+        "correct_answer": "A"
     },
     {
-        "question": "Která událost vedla k vzniku Americké revoluce v roce 1775?",
-        "options": ["A. Vyhlášení Deklarace nezávislosti", "B. Bitva u Lexingtonu a Concordu", "C. Boston Tea Party", "D. Podepsání Pařížské mírové smlouvy"],
-        "correct_answer": "B"
+        "question": "Jaký brankář byl vyhlášen jako brankář s nejlepší úspěšnpostí zákroků",
+        "question": ["A. Leonardo Genoni", "B. Alex Lyon", "C. Samuel Hlavaj", "D. Kristers Gudlevskis"],
+        "correct_answer": "A"
     }
 ]
 
