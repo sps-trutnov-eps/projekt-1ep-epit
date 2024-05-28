@@ -15,7 +15,7 @@ from typing import Callable
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 11
+protocol_version = 12
 packet_len_bytes = 2
 
 # == client state ==
@@ -28,7 +28,7 @@ class GameDisconnect(Exception):
         self.what = what
 
 class ClientState:
-    __slots__ = ["server_conn", "player_name", "remote_player_states", "on_lobby_info", "game_state", "is_host", "on_game_result"]
+    __slots__ = ["server_conn", "player_name", "remote_player_states", "on_lobby_info", "game_state", "is_host", "on_game_result", "on_player_info", "on_game_score"]
 
     def __init__(self, uri, player_name, is_host, hooks) -> None:
         self.server_conn = socket.create_connection(uri)
@@ -42,6 +42,8 @@ class ClientState:
 
         self.on_lobby_info = hooks[0]
         self.on_game_result = hooks[1]
+        self.on_player_info = hooks[2]
+        self.on_game_score = hooks[3]
 
     server_conn: socket.socket
     client_thread: threading.Thread
@@ -54,6 +56,9 @@ class ClientState:
     # list of teams which is a list of players which is a (p_name, p_color, p_model)
     on_lobby_info: Callable
     on_game_result: Callable
+
+    on_player_info: Callable
+    on_game_score: Callable # TODO: for Pavel, add a function to hooks[3] to `netcode.netcode_setup()` in `main()` that will receive packet[2] from s_game_tick
 
     # note: a random player can become a host when the current host disconnects (aka this value can change)
     is_host: bool
@@ -91,9 +96,6 @@ def read_packet(sock: socket.socket) -> list:
 
     return json.loads(message) 
 
-# TODO: player continuos updates (score, player world position)
-# TODO: player events (eg. game ended) <- must be able to affect minigames
-
 # called once per client frame to sync with server
 def client_sync(watch_for_lock_response: bool = False) -> bool | None:
     # == parse server packets (if any) ==
@@ -113,7 +115,7 @@ def client_sync(watch_for_lock_response: bool = False) -> bool | None:
                 packets.append(read_packet(sock))
 
             except TimeoutError:
-                return # no server packets
+                raise GameDisconnect("Connection timeout.")
             except ConnectionError:
                 raise GameDisconnect("Connection with server interupted.")
 
@@ -123,8 +125,8 @@ def client_sync(watch_for_lock_response: bool = False) -> bool | None:
 
     for packet in packets:
         if packet[0] == "s_game_tick":
-            # client_state.remote_player_states = packet[1]
-            pass
+            client_state.on_player_info(packet[1])
+            client_state.on_game_score(packet[2])
 
         elif packet[0] == "s_game_event":
             event_type = packet[1]
@@ -134,14 +136,14 @@ def client_sync(watch_for_lock_response: bool = False) -> bool | None:
                 # game started, load main map
 
                 client_state.game_state = 1
-                print("game start")
+                print("client: game start")
             
             elif event_type == "game_end":
                 # game ended, load lobby and display results
 
                 client_state.game_state = 0
                 client_state.on_game_result(packet[2])
-                print("game end")
+                print("client: game end")
 
             elif event_type == "lobby_update":
                 # the lobby data has changed (client connects/disconnects, team/skin changes)
@@ -207,6 +209,9 @@ def change_team(index: int):
 
     send_packet(client_state.server_conn, ("c_change_team", index))
 
+def update_player_info(pos):
+    send_packet(client_state.server_conn, ("c_player_info", pos, None))
+
 # note: called only by the server!!!
 def game_end():
     server_state.game_state = 0
@@ -221,6 +226,8 @@ def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks:
         client_state = ClientState(uri, player_name, is_host, client_hooks)
     except ConnectionError:
         return (False, "Connection refused by server.")
+    except TimeoutError:
+        return (False, "Timeout connecting to server.")
 
     # init client with the server
     try:
@@ -294,7 +301,6 @@ class ServerState:
     def hash_lobby(self) -> bytes:
         return hashlib.sha1(json.dumps(self.lobby).encode('utf-8'), usedforsecurity=False).digest()
 
-    server_tick_thread: threading.Thread
     server: socketserver.ThreadingTCPServer
 
     remote_locks: dict[str, threading.Lock]
@@ -374,7 +380,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         while True:
             # update client handler
 
-            if len(server_state.host_players) == 0: # always at least one person must be "host" player
+            if len(server_state.host_players) == 0: # always at least one person must be a "host" player
                 server_state.host_players.add(player_name)
 
                 # inform client that it has become host
@@ -414,6 +420,11 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     elif packet[0] == "c_lock_release":
                         server_state.remote_locks[packet[1]].release()
 
+                    # player packets
+
+                    elif packet[0] == "c_player_info":
+                        server_state.player_info[player_name] = packet[1]
+
                     # host packets
 
                     elif packet[0] == "c_host_game_start":
@@ -424,9 +435,6 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                             continue
 
                         server_state.game_state = 1
-
-                        server_state.server_tick_thread = threading.Thread(target=game_end)
-                        server_state.server_tick_thread.start()
 
                     elif packet[0] == "c_host_server_quit":
                         if not player_name in server_state.host_players:
@@ -454,16 +462,20 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
             
             # == send server packets to client ==
 
-            game_tick = ("s_game_tick", {}, {})
+            # only send ticks in-game
+            if server_state.game_state == 1:
+                game_tick = ("s_game_tick", {}, {})
 
-            # player updates (position, held item, etc.)
+                # player updates (position, held item, etc.)
 
-            for name, p in server_state.player_info.items():
-                game_tick[1][name] = (p[0], p[1])
-            
-            # game score
+                for name, p in server_state.player_info.items():
+                    game_tick[1][name] = (p[0], p[1])
+                
+                # game score
 
-            game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+                game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+
+                send_packet(self.request, game_tick)
 
             # check for changed synced data
 
