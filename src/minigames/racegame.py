@@ -1,6 +1,7 @@
 import pygame
 import sys
 import math
+import time
 
 pygame.init()
 
@@ -44,62 +45,111 @@ obstacles = [
 ]
 
 # Define speed of the formula
-formula_speed = 0.1  # Adjust as needed
+formula_speed = 0.3  # Adjust as needed
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+# Define button properties
+button_font = pygame.font.Font(None, 74)
+button_text = button_font.render('Start Game', True, (255, 255, 255))
+button_rect = button_text.get_rect(center=(window_width / 2, window_height / 2))
+
+# Define the lap completion point (e.g., crossing the start line at y=100)
+lap_completion_rect = pygame.Rect(500, 90, 200, 20)  # Adjust as needed
+
+def main_menu():
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(event.pos):
+                    return  # Exit the main menu to start the game
+
+        window.fill((0, 0, 0))  # Fill the screen with black
+        window.blit(button_text, button_rect)  # Draw the start game button
+        pygame.display.flip()
+        clock.tick(60)
+
+def game_loop():
+    global car_pos_x, car_pos_y, car_angle
+
+    start_time = time.time()
+    lap_completed = False
+
+    while True:
+        elapsed_time = time.time() - start_time
+        if elapsed_time > 60:  # Check if more than 60 seconds have passed
             pygame.quit()
             sys.exit()
 
-    window.fill((79, 121, 66))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-    # Draw obstacles
-    for obstacle in obstacles:
-        pygame.draw.rect(window, (128, 128, 128), obstacle)
+        window.fill((79, 121, 66))
 
-    # Rotate the car
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_a]:
-        car_angle += 1
-    if keys[pygame.K_d]:
-        car_angle -= 1
-
-    # Move the car forward
-    if keys[pygame.K_w]:
-        new_pos_x = car_pos_x + math.cos(math.radians(car_angle)) * 2
-        new_pos_y = car_pos_y - math.sin(math.radians(car_angle)) * 2
-
-        # Check if the new position is within the area defined by obstacles
-        within_bounds = False
+        # Draw obstacles
         for obstacle in obstacles:
-            if obstacle.collidepoint(new_pos_x, new_pos_y):
-                within_bounds = True
-                break
+            pygame.draw.rect(window, (128, 128, 128), obstacle)
 
-        if within_bounds:
-            car_pos_x = new_pos_x
-            car_pos_y = new_pos_y
+        # Draw lap completion line
+        pygame.draw.rect(window, (255, 0, 0), lap_completion_rect)
 
-    # Wrap around screen
-    if car_pos_x > window_width:
-        car_pos_x = 0
-    elif car_pos_x < 0:
-        car_pos_x = window_width
-    if car_pos_y > window_height:
-        car_pos_y = 0
-    elif car_pos_y < 0:
-        car_pos_y = window_height
+        # Rotate the car
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a]:
+            car_angle += 1
+        if keys[pygame.K_d]:
+            car_angle -= 1
 
-    # Draw the scaled formula
-    rotated_formula = pygame.transform.rotate(scaled_formula, car_angle)  # Rotate the formula
-    formula_rect = rotated_formula.get_rect(center=car_rect.center)  # Set rotation point to center
-    formula_rect.topleft = (car_pos_x - formula_rect.width / 2, car_pos_y - formula_rect.height / 2)
-    window.blit(rotated_formula, formula_rect.topleft)
+        # Move the car forward
+        if keys[pygame.K_w]:
+            new_pos_x = car_pos_x + math.cos(math.radians(car_angle)) * 2
+            new_pos_y = car_pos_y - math.sin(math.radians(car_angle)) * 2
 
-    pygame.display.flip()
-    clock.tick(120)  # Keep FPS at 60
+            # Check if the new position is within the area defined by obstacles
+            within_bounds = False
+            for obstacle in obstacles:
+                if obstacle.collidepoint(new_pos_x, new_pos_y):
+                    within_bounds = True
+                    break
 
-    # Slow down the formula movement
-    pygame.time.delay(int(1000 / 60 * formula_speed))  # 60 FPS equivalent delay with speed adjustment
+            if within_bounds:
+                car_pos_x = new_pos_x
+                car_pos_y = new_pos_y
+
+        # Check if the car crosses the lap completion line
+        if lap_completion_rect.collidepoint(car_pos_x, car_pos_y):
+            lap_completed = True
+
+        if lap_completed:
+            break  # Exit the game loop if lap is completed
+
+        # Wrap around screen
+        if car_pos_x > window_width:
+            car_pos_x = 0
+        elif car_pos_x < 0:
+            car_pos_x = window_width
+        if car_pos_y > window_height:
+            car_pos_y = 0
+        elif car_pos_y < 0:
+            car_pos_y = window_height
+
+        # Draw the scaled formula
+        rotated_formula = pygame.transform.rotate(scaled_formula, car_angle)  # Rotate the formula
+        formula_rect = rotated_formula.get_rect(center=car_rect.center)  # Set rotation point to center
+        formula_rect.topleft = (car_pos_x - formula_rect.width / 2, car_pos_y - formula_rect.height / 2)
+        window.blit(rotated_formula, formula_rect.topleft)
+
+        pygame.display.flip()
+        clock.tick(300)  # Keep FPS at 60
+
+        # Slow down the formula movement
+        pygame.time.delay(int(1000 / 60 * formula_speed))  # 60 FPS equivalent delay with speed adjustment
+
+# Main loop
+while True:
+    main_menu()
+    game_loop()
 
