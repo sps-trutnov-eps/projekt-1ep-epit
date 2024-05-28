@@ -1,114 +1,159 @@
-import pygame as pg
-from pygame.locals import *
+import pygame
+import random
+import math
+import os
 
-# Screen settings
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+pygame.init()
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+black = (0, 0, 0)
+white = (255, 255, 255)
 
-# Initialize Pygame
-pg.init()
+screen_width = 1024
+screen_height = 768
 
-# Load images and resize player image
-try:
-    obrazek = pg.image.load("pixil-frame-0 (3).png")
-    obrazek = pg.transform.scale(obrazek, (50, 50))  # Resize the player image
-    obrazekP = pg.image.load("pixil-frame-0 (5).png")
-    obrazekP = pg.transform.scale(obrazekP, (50, 50))  # Resize the image P
-except Exception as e:
-    print(f"Error loading images: {e}")
-    pg.quit()
-    exit(1)
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Space Invaders")
 
-print("Images loaded successfully.")
+def load_image(image_path, scale=(64, 64)):
+    try:
+        image = pygame.image.load(image_path)
+        image = pygame.transform.scale(image, scale)
+        return image
+    except pygame.error as e:
+        print(f"Obrázek {image_path} se nepodařilo načíst: {e}")
+        exit()
 
-# Define map size
-MAP_WIDTH = 2000
-MAP_HEIGHT = 1500
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Define player size
-PLAYER_WIDTH, PLAYER_HEIGHT = obrazek.get_size()
+player_img = load_image(os.path.join(current_dir, 'player.png'), scale=(128, 128))
+enemy_img = load_image(os.path.join(current_dir, 'enemy.png'), scale=(96, 96))
+bullet_img = load_image(os.path.join(current_dir, 'bullet.png'), scale=(32, 32))
 
-# Define initial player position
-player_x = (SCREEN_WIDTH - PLAYER_WIDTH) // 2
-player_y = (SCREEN_HEIGHT - PLAYER_HEIGHT) // 2
+player_x = 480
+player_y = 680
+player_x_change = 0
+player_speed = 7
 
-# Define initial map offset
-map_offset_x = 0
-map_offset_y = 0
+enemy_img_list = []
+enemy_x = []
+enemy_y = []
+enemy_x_change = []
+enemy_y_change = []
+num_of_enemies = 6
 
-# Define scroll speed
-SCROLL_SPEED = 5
+for i in range(num_of_enemies):
+    enemy_img_list.append(enemy_img)
+    enemy_x.append(random.randint(0, screen_width - 96))
+    enemy_y.append(random.randint(50, 150))
+    enemy_x_change.append(4)
+    enemy_y_change.append(50)
 
-# Define blocked areas (walls)
-blocked_areas = [
-    pg.Rect(100, 100, 200, 30),   # First wall
-    pg.Rect(400, 300, 150, 25),   # Second wall
-    # Add more walls as needed
-]
+bullet_x = 0
+bullet_y = 680
+bullet_y_change = 20
+bullet_state = "ready" 
 
-def handle_events() -> bool:
-    global player_x, player_y, map_offset_x, map_offset_y
+score_value = 0
+font = pygame.font.Font('freesansbold.ttf', 32)
 
-    for event in pg.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            return False
+text_x = 10
+text_y = 10
 
-    keys = pg.key.get_pressed()
-    if keys[pg.K_w]:
-        player_y -= SCROLL_SPEED
-        if player_y < 0:
-            player_y = 0
-        map_offset_y += SCROLL_SPEED
-    if keys[pg.K_s]:
-        player_y += SCROLL_SPEED
-        if player_y > SCREEN_HEIGHT - PLAYER_HEIGHT:
-            player_y = SCREEN_HEIGHT - PLAYER_HEIGHT
-        map_offset_y -= SCROLL_SPEED
-    if keys[pg.K_a]:
-        player_x -= SCROLL_SPEED
-        if player_x < 0:
-            player_x = 0
-        map_offset_x += SCROLL_SPEED
-    if keys[pg.K_d]:
-        player_x += SCROLL_SPEED
-        if player_x > SCREEN_WIDTH - PLAYER_WIDTH:
-            player_x = SCREEN_WIDTH - PLAYER_WIDTH
-        map_offset_x -= SCROLL_SPEED
+over_font = pygame.font.Font('freesansbold.ttf', 64)
 
-    # Clamp map offset to stay within map bounds
-    map_offset_x = max(min(map_offset_x, MAP_WIDTH - SCREEN_WIDTH), 0)
-    map_offset_y = max(min(map_offset_y, MAP_HEIGHT - SCREEN_HEIGHT), 0)
+def show_score(x, y):
+    score = font.render("Score : " + str(score_value), True, white)
+    screen.blit(score, (x, y))
 
-    return True
+def game_over_text():
+    over_text = over_font.render("GAME OVER", True, white)
+    screen.blit(over_text, (350, 250))
 
-def level(screen: pg.Surface) -> None:
-    clock = pg.time.Clock()
-    while handle_events():
-        screen.fill(BLACK)
-        # Draw map background (just a white rectangle for now)
-        pg.draw.rect(screen, WHITE, (0, 0, MAP_WIDTH, MAP_HEIGHT))
-        # Draw blocked areas (walls)
-        for wall in blocked_areas:
-            pg.draw.rect(screen, BLACK, wall.move(-map_offset_x, -map_offset_y))
-        # Draw player and image P
-        screen.blit(obrazek, (player_x, player_y))
-        screen.blit(obrazekP, (SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT // 2 - PLAYER_HEIGHT // 2))
-        pg.display.update()
-        clock.tick(60)
+def player(x, y):
+    screen.blit(player_img, (x, y))
 
-def init_game() -> pg.Surface:
-    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pg.display.set_caption('Game')
-    return screen
+def enemy(x, y, i):
+    screen.blit(enemy_img_list[i], (x, y))
 
-def main() -> None:
-    screen = init_game()
-    level(screen)
-    pg.quit()
+def fire_bullet(x, y):
+    global bullet_state
+    bullet_state = "fire"
+    screen.blit(bullet_img, (x + 16, y + 10))
 
-if __name__ == '__main__':
-    main()
+def is_collision(enemy_x, enemy_y, bullet_x, bullet_y):
+    distance = math.sqrt((math.pow(enemy_x - bullet_x, 2)) + (math.pow(enemy_y - bullet_y, 2)))
+    return distance < 27
+
+clock = pygame.time.Clock()
+running = True
+while running:
+
+    screen.fill(black)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                player_x_change = -player_speed
+            if event.key == pygame.K_RIGHT:
+                player_x_change = player_speed
+            if event.key == pygame.K_SPACE:
+                if bullet_state == "ready":
+                    bullet_x = player_x
+                    fire_bullet(bullet_x, bullet_y)
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                player_x_change = 0
+
+    
+    player_x += player_x_change
+    if player_x <= 0:
+        player_x = 0
+    elif player_x >= screen_width - 128:
+        player_x = screen_width - 128
+
+    for i in range(num_of_enemies):
+
+        
+        if enemy_y[i] > 640:
+            for j in range(num_of_enemies):
+                enemy_y[j] = 2000
+            game_over_text()
+            break
+
+        enemy_x[i] += enemy_x_change[i]
+        if enemy_x[i] <= 0:
+            enemy_x_change[i] = 4
+            enemy_y[i] += enemy_y_change[i]
+        elif enemy_x[i] >= screen_width - 96:
+            enemy_x_change[i] = -4
+            enemy_y[i] += enemy_y_change[i]
+
+      
+        collision = is_collision(enemy_x[i], enemy_y[i], bullet_x, bullet_y)
+        if collision:
+            bullet_y = 680
+            bullet_state = "ready"
+            score_value += 1
+            enemy_x[i] = random.randint(0, screen_width - 96)
+            enemy_y[i] = random.randint(50, 150)
+
+        enemy(enemy_x[i], enemy_y[i], i)
+
+    if bullet_y <= 0:
+        bullet_y = 680
+        bullet_state = "ready"
+    if bullet_state == "fire":
+        fire_bullet(bullet_x, bullet_y)
+        bullet_y -= bullet_y_change
+
+    player(player_x, player_y)
+    show_score(text_x, text_y)
+    pygame.display.update()
+
+    clock.tick(60)
+
+pygame.quit()
