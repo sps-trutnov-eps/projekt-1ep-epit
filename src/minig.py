@@ -1,5 +1,6 @@
 import sys
 import pygame
+import random
 
 pygame.init()
 
@@ -34,7 +35,7 @@ pozice_devaty_y = 400
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 BLUE = (0, 0, 255)
-BLACK = (0, 0, 0)  
+BLACK = (0, 0, 0)
 
 # Vytvoření seznamu čtverců
 ctverce = [
@@ -52,10 +53,6 @@ ctverce = [
 # Barvy čtverců
 barvy = [GRAY] * len(ctverce)
 
-# Časovač pro automatickou změnu barvy
-AUTO_COLOR_CHANGE_INTERVAL = 250  
-last_color_change_time = pygame.time.get_ticks()
-
 # Fonty pro menu
 fonty_menu = [
     pygame.font.Font(None, 36),
@@ -69,6 +66,24 @@ pozice_textu_y = [220, 100, 120]
 
 # Stav hry
 hrajeme_hru = False
+ctverec_na_kliknuti = None
+odpočet = 3
+odpočet_start = False
+čas_startu_odpočtu = 0
+
+# Funkce pro zobrazení akce
+def zobraz_akci(index):
+    barvy[index] = BLUE
+    pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
+    for i, ctverec in enumerate(ctverce):
+        pygame.draw.rect(okno, barvy[i], ctverec)
+    pygame.display.update()
+    pygame.time.delay(1000)  # Zobraz akci po dobu 1 sekundy
+    barvy[index] = GRAY
+    pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
+    for i, ctverec in enumerate(ctverce):
+        pygame.draw.rect(okno, barvy[i], ctverec)
+    pygame.display.update()
 
 # Hlavní smyčka
 while True:
@@ -82,86 +97,62 @@ while True:
             for i, text in enumerate(texty_menu):
                 text_rect = fonty_menu[i].render(text, True, BLACK).get_rect(center=(rozliseni_okna[0] // 2, pozice_textu_y[i]))
                 if text_rect.collidepoint(mouse_pos):
-                    if text == "Start":
+                    if text == "Pro začátek hry stisni klávesu enter":
                         # Spustit hru
                         hrajeme_hru = True
         elif not hrajeme_hru and udalost.type == pygame.KEYDOWN:
             if udalost.key == pygame.K_RETURN:
-                hrajeme_hru = True
-                    
-    # Pokud hrajeme hru, reagujeme na stisk myši
-    if hrajeme_hru:
-        tlacitka_mysi = pygame.mouse.get_pressed()
-        
-        # Pokud je stisknuto levé tlačítko myši
-        if tlacitka_mysi[0]:
-            mouse_pos = pygame.mouse.get_pos()
-            
-            for i, ctverec in enumerate(ctverce):
-                if ctverec.collidepoint(mouse_pos):
-                    
-                    barvy[i] = BLUE
-                    
-                    last_color_change_time = pygame.time.get_ticks()
-        
-        # Automatická změna barvy po uplynutí časovače
-        if pygame.time.get_ticks() - last_color_change_time >= AUTO_COLOR_CHANGE_INTERVAL:
-            for i in range(len(ctverce)):
-                
-                if barvy[i] == BLUE:
-                    barvy[i] = GRAY
-            
-            last_color_change_time = pygame.time.get_ticks()
+                odpočet_start = True
+                čas_startu_odpočtu = pygame.time.get_ticks()
+
+    if odpočet_start:
+        aktuální_čas = pygame.time.get_ticks()
+        sekundy_od_startu = (aktuální_čas - čas_startu_odpočtu) // 1000
+
+        if sekundy_od_startu < odpočet:
+            okno.fill(WHITE)
+            font = pygame.font.Font(None, 74)
+            text = font.render(str(odpočet - sekundy_od_startu), True, BLACK)
+            okno.blit(text, (rozliseni_okna[0] // 2 - text.get_width() // 2, rozliseni_okna[1] // 2 - text.get_height() // 2))
+            pygame.display.update()
+        else:
+            odpočet_start = False
+            okno.fill(WHITE)
+            pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
+            for ctverec, barva in zip(ctverce, barvy):
+                pygame.draw.rect(okno, barva, ctverec)
+            pygame.display.update()
+            pygame.time.delay(2000)
+            hrajeme_hru = True
+            index = random.randint(0, 8)
+            zobraz_akci(index)
+            ctverec_na_kliknuti = index
 
     # Vykreslení obrazu
-    okno.fill(WHITE)
-    
-    # Pokud nehráme hru, vykreslíme hlavní menu
-    if not hrajeme_hru:
+    if not hrajeme_hru and not odpočet_start:
+        okno.fill(WHITE)
         pygame.draw.rect(okno, WHITE, (0, 0, rozliseni_okna[0], 600))
         for i, text in enumerate(texty_menu):
             text_surface = fonty_menu[i].render(text, True, BLACK)
             text_rect = text_surface.get_rect(center=(rozliseni_okna[0] // 2, pozice_textu_y[i]))
             okno.blit(text_surface, text_rect)
-    else:
-        # Pokud hrajeme hru, vykreslíme čtverce
+    elif hrajeme_hru:
+        okno.fill(WHITE)
         pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
         for ctverec, barva in zip(ctverce, barvy):
             pygame.draw.rect(okno, barva, ctverec)
-        
+        if ctverec_na_kliknuti is not None:
+            for udalost in pygame.event.get():
+                if udalost.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif udalost.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if ctverce[ctverec_na_kliknuti].collidepoint(mouse_pos):
+                        zobraz_akci(ctverec_na_kliknuti)
+                        pygame.time.delay(2000)
+                        hrajeme_hru = False
+                        ctverec_na_kliknuti = None
+
     pygame.display.update()
 
-
-
-
-
-# tady odkažte svoji minihru s jejím jménem (stejně jako test)
-minigame_lib = {
-    "test": mini_test.test_minigame,
-    "simon": mini_simon
-}
-
-def switch_to_minigame(name, sur: pygame.Surface):
-    # minigame setup
-
-    mini.mini_surface = sur
-    mini_loop = minigame_lib[name]
-
-    # run minigame
-
-    result = mini_loop()
-
-    # check result
-
-    if result == None:
-        raise ValueError(f"minigame {name} nevrátil jestli vyhrál/prohrál (`return False` pokud nejde vyhrát ani prohrát, např. automat)")
-    elif result == False:
-        pass # minihra nemá wil/fail state (např. automat)
-
-    elif result.did_win == False: # win
-        pass # TODO: pro Pavla
-    
-    elif result.did_win == True: # fail
-        pass # TODO: pro Pavla
-    
-    okno.fill((255,255,255))
