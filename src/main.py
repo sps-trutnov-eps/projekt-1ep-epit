@@ -33,22 +33,20 @@ x11 = 1374
 y11 = 1760
 x12 = 1930
 y12 = 1760
-x13 = 0
-y13 = 0
-x14 = 0
-y14 = 0
-x15 = 0
-y15 = 0
-x16 = 0
-y16 = 0
-x17 = 0
-y17 = 0
-x18 = 0
-y18 = 0
-x19 = 0
-y19 = 0
-x20 = 0
-y20 = 0
+x13 = 3232
+y13 = 1760
+x14 = 3232
+y14 = 1020
+x15 = 3420
+y15 = 1100
+x16 = 3420
+y16 = 1575
+x17 = 2750
+y17 = 2880
+x18 = 2675
+y18 = 1830
+x19 = 1450
+y19 = 3250
 
 file_path = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (3).png")
 file_path2 = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (5).png")
@@ -63,7 +61,7 @@ except Exception as e:
 print("Images loaded successfully.")
 def handle_events() -> bool:
     """Events handling function."""
-    global x, y, x1, y1, x2, x3 ,y2, y3, x4, x5, x6, y6, x7, y7, x8, y8, x9, y9, x10, y10, x11, y11, x12, y12, x13, y13, x14, y14, x15, y15, x16, y16, x17, y17, x18, y18, x19, y19, x20, y20
+    global x, y, x1, y1, x2, x3 ,y2, y3, x4, x5, x6, y6, x7, y7, x8, y8, x9, y9, x10, y10, x11, y11, x12, y12, x13, y13, x14, y14, x15, y15, x16, y16, x17, y17, x18, y18, x19, y19
     keys = pg.key.get_pressed()
     if keys[pg.K_w]:
         y += 20
@@ -84,7 +82,6 @@ def handle_events() -> bool:
         y17 += 20
         y18 += 20
         y19 += 20
-        y20 += 20
 
     if keys[pg.K_s]:
         y -= 20
@@ -105,7 +102,6 @@ def handle_events() -> bool:
         y17 -= 20
         y18 -= 20
         y19 -= 20
-        y20 -= 20
 
     if keys[pg.K_a]:
         x += 20
@@ -128,7 +124,6 @@ def handle_events() -> bool:
         x17 += 20
         x18 += 20
         x19 += 20
-        x20 += 20
 
     if keys[pg.K_d]:
         x -= 20
@@ -151,7 +146,6 @@ def handle_events() -> bool:
         x17 -= 20
         x18 -= 20
         x19 -= 20
-        x20 -= 20
     for event in pg.event.get():
         if (event.type == QUIT or
             (event.type == KEYDOWN and event.key == K_ESCAPE)):
@@ -188,14 +182,13 @@ def draw_walls():
     pg.draw.rect(screen, (255, 255, 255), (x10, y10, 95, 1310))
     pg.draw.rect(screen, (255, 255, 255), (x11, y11, 280, 98))
     pg.draw.rect(screen, (255, 255, 255), (x12, y12, 1040, 98))
-    pg.draw.rect(screen, (255, 255, 255), (x13, y13, 95, 1310))
-    pg.draw.rect(screen, (255, 255, 255), (x14, y14, 95, 1310))
-    pg.draw.rect(screen, (255, 255, 255), (x15, y15, 95, 1310))
+    pg.draw.rect(screen, (255, 255, 255), (x13, y13, 280, 98))
+    pg.draw.rect(screen, (255, 255, 255), (x14, y14, 850, 95))
+    pg.draw.rect(screen, (255, 255, 255), (x15, y15, 95, 200))
     pg.draw.rect(screen, (255, 255, 255), (x16, y16, 95, 1310))
-    pg.draw.rect(screen, (255, 255, 255), (x17, y17, 95, 1310))
-    pg.draw.rect(screen, (255, 255, 255), (x18, y18, 95, 1310))
-    pg.draw.rect(screen, (255, 255, 255), (x19, y19, 95, 1310))
-    pg.draw.rect(screen, (255, 255, 255), (x20, y20, 95, 1310))
+    pg.draw.rect(screen, (255, 255, 255), (x17, y17, 1500, 95))
+    pg.draw.rect(screen, (255, 255, 255), (x18, y18, 95, 1500))
+    pg.draw.rect(screen, (255, 255, 255), (x19, y19, 1400, 95))
 
 def init_game() -> pg.Surface:
     global screen
