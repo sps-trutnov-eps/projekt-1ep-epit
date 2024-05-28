@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
 import math
+import random
 
 pg.init()
 okno = pg.display.set_mode([800, 600])
@@ -28,12 +29,14 @@ pg.mouse.set_cursor(cursors[cursor_index])
 
 pozice = (1,1)
 bod_x = 300
-bod_y = 300
+bod_y = 10
 velikost_kruhu = 50
 stred_x = bod_x + velikost_kruhu/2
 stred_y = bod_y + velikost_kruhu/2
 stred = (stred_x, stred_y)
 dotyk = math.sqrt((pozice[0]-stred_x)**2+(pozice[1]+stred_y)**2)
+fake_stred = bod_x + bod_y + velikost_kruhu
+body = 0
 
 
 
@@ -54,11 +57,18 @@ while True:
     
     
     
-    if dotyk >= :
-       # print("nice")
+    if dotyk <= stred[0] + velikost_kruhu/2 and dotyk >= stred[0] - velikost_kruhu/2 and dotyk <= stred[1] + velikost_kruhu/2 and dotyk >= stred[1] - velikost_kruhu/2 and udalost.type == pg.MOUSEBUTTONDOWN :
+       body + 1
+       bod_x = random.randrange(0, 800)
+       bod_y = random.randrange(0, 600)
+       stred_x = bod_x + velikost_kruhu/2
+       stred_y = bod_y + velikost_kruhu/2
+       fake_stred = bod_x + bod_y + velikost_kruhu
+       
+       
    
+    
     print(dotyk)
-    #print(pozice)
     
     
     okno.fill((100,200,36))
