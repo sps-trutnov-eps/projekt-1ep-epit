@@ -42,6 +42,7 @@ stred = (stred_x, stred_y)
 dotyk = math.sqrt((pozice[0]-stred_x)**2+(pozice[1]+stred_y)**2)
 fake_stred = bod_x + bod_y + velikost_kruhu
 body = 0
+cas = 0
 
 
 
@@ -73,11 +74,13 @@ while True:
        
    
     
-    print(dotyk)
+    cas = pg.time.get_ticks()/1000
+    rncas = round(cas, 1)
     
     
     okno.fill((100,200,36))
     draw_text(str(body), text_font, (255,0,0), 10, 550)
+    draw_text(str(rncas), text_font, (255,0,0), 10, 1)
     
     pg.draw.ellipse(okno, (100,28,0), (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
         
