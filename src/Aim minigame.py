@@ -44,9 +44,11 @@ dotyk = math.sqrt((pozice[0]-stred_x)**2+(pozice[1]+stred_y)**2)
 fake_stred = bod_x + bod_y + velikost_kruhu
 body = 0
 cas = 0
-cas1 = 0
 tutorial = 1
-
+barva_kruhu1 = random.randrange(0, 255)
+barva_kruhu2 = 0
+barva_kruhu3 = random.randrange(0, 255)
+barva_kruhu = (barva_kruhu1, barva_kruhu2, barva_kruhu3)
 
 
 
@@ -67,7 +69,7 @@ while True:
             
         okno.fill((100,200,100))
         draw_text(("AIM test"), text_font2, (155,0,100), 300, 0)
-        draw_text(("klikej na hnědý koule"), text_font2, (255,0,100), 0, 75)
+        draw_text(("klikni na co nejvíc kruhů"), text_font2, (255,0,100), 0, 75)
         draw_text(("naklikej 25 bodů"), text_font2, (255,0,100), 0, 150)
         draw_text(("než dá timer 25sekund"), text_font2, (255,0,100), 0, 225)
         draw_text(("hru zapneš kliknutím myši kamkoli"), text_font, (255,0,100), 0, 550)
@@ -94,6 +96,14 @@ while True:
            stred_x = bod_x + velikost_kruhu/2
            stred_y = bod_y + velikost_kruhu/2
            fake_stred = bod_x + bod_y + velikost_kruhu
+           barva_kruhu1 = random.randrange(0, 255)
+           barva_kruhu2 = random.randrange(0, 255)
+           if barva_kruhu2 == 200:
+               barva_kruhu2 += 10
+           barva_kruhu3 = random.randrange(0, 255)
+           barva_kruhu = (barva_kruhu1, barva_kruhu2, barva_kruhu3)
+           
+           
            
            
        
@@ -117,6 +127,6 @@ while True:
         draw_text(str(rncas), text_font, (255,0,0), 350, 325)
         
         
-        pg.draw.ellipse(okno, (100,28,0), (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
+        pg.draw.ellipse(okno, barva_kruhu, (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
             
         pg.display.update()
