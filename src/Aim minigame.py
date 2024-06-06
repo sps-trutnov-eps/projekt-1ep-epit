@@ -26,6 +26,11 @@ cursor_index = 1
 
 pg.mouse.set_cursor(cursors[cursor_index])
 
+text_font = pg.font.SysFont('Arial', 50)
+
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    okno.blit(img, (x, y))
 
 pozice = (1,1)
 bod_x = 300
@@ -57,8 +62,8 @@ while True:
     
     
     
-    if dotyk <= 26 and udalost.type == pg.MOUSEBUTTONDOWN :
-       body + 1
+    if dotyk <= 27 and udalost.type == pg.MOUSEBUTTONDOWN :
+       body += 1
        bod_x = random.randrange(0, 800 - velikost_kruhu)
        bod_y = random.randrange(0, 600 - velikost_kruhu)
        stred_x = bod_x + velikost_kruhu/2
@@ -72,6 +77,7 @@ while True:
     
     
     okno.fill((100,200,36))
+    draw_text(str(body), text_font, (255,0,0), 10, 550)
     
     pg.draw.ellipse(okno, (100,28,0), (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
         
