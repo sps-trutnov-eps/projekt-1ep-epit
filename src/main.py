@@ -273,7 +273,7 @@ def main(scene_id: int = 0) -> None:
         # simple scene switcher, lobby or level return the index of the next scene (None = exit)
 
         loop_list = [
-            p_test,
+            # p_test,
             main_menu,
             lobby,
             level
