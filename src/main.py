@@ -1,5 +1,6 @@
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
+import time
 
 import netcode
 import common
@@ -191,6 +192,9 @@ def lobby(screen: pg.Surface) -> int:
     light_brown = (205, 133, 63)
     blue = (0, 0, 255)
     dark_gray = (50, 50, 50)
+
+    center = (400, 300)
+    square_size = 550
     
     def draw_table_and_chairs(surface, table_color, chair_color, table_rect, chair_size, gap):
         pg.draw.rect(surface, table_color, table_rect)
@@ -215,6 +219,10 @@ def lobby(screen: pg.Surface) -> int:
         pg.draw.circle(surface, knob_color, knob_position, 3)
         
     running = True
+
+    player_state = ([400, 300], [0, 0])
+
+    t = time.time()
     
     while running:
         netcode.client_sync()
@@ -227,6 +235,13 @@ def lobby(screen: pg.Surface) -> int:
 
         host_start_button = (150, 600, 200, 50)
 
+        colliders = [
+            (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, square_size + 100, 50),
+            (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, 50, square_size + 100),
+            (center[0] - square_size // 2 - 50, center[1] + square_size // 2, square_size + 100, 50),
+            (center[0] + square_size // 2, center[1] - square_size // 2 - 50, 50, square_size + 100),
+        ]
+
         for event in pg.event.get():
             if (event.type == QUIT or
                 (event.type == KEYDOWN and event.key == K_ESCAPE)):
@@ -235,11 +250,8 @@ def lobby(screen: pg.Surface) -> int:
             elif event.type == pg.MOUSEBUTTONDOWN:
                 if common.is_click_on_ui(host_start_button, event):
                     netcode.start_game()
-            
+
         screen.fill(black)
-    
-        center = (400, 300)
-        square_size = 550
         
         draw_square(screen, dark_gray, center, square_size + 20)
         draw_square(screen, brown, center, square_size)
@@ -266,28 +278,37 @@ def lobby(screen: pg.Surface) -> int:
                 chair_rect = (chair_x, chair_y, chair_width, chair_height)
                 draw_table_and_chairs(screen, light_brown, light_brown, table_rect, (chair_width, chair_height), gap)
                 
-                teacher_table_width, teacher_table_height = 35, 25 #je to naopak, table width, height zaznamenává velikost židle a chair width, height zaznamenává velikost stolu
-                teacher_chair_width, teacher_chair_height = 100, 40
+                colliders.append(table_rect)
+
+            teacher_table_width, teacher_table_height = 35, 25 #je to naopak, table width, height zaznamenává velikost židle a chair width, height zaznamenává velikost stolu
+            teacher_chair_width, teacher_chair_height = 100, 40
+                    
+            teacher_table_x = center[0] - square_size // 2 + 10
+            teacher_table_y = center[1] + square_size // 2 - teacher_table_height - 10
                 
+            teacher_chair_x = teacher_table_x + (teacher_table_width - teacher_table_width) // 2
+            teacher_chair_y = teacher_table_y - teacher_chair_height - 5
                 
-                teacher_table_x = center[0] - square_size // 2 + 10
-                teacher_table_y = center[1] + square_size // 2 - teacher_table_height - 10
+            teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_table_width, teacher_table_height)
+            teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
                 
-                teacher_chair_x = teacher_table_x + (teacher_table_width - teacher_table_width) // 2
-                teacher_chair_y = teacher_table_y - teacher_chair_height - 5
+            door_width, door_height = 10, 70
+            door_x = center[0] + square_size // 2 - door_width
+            door_y = center[1] + square_size // 2 - door_height - 10
+            draw_door(screen, gray, (door_x, door_y), (door_width, door_height), black, 10)
                 
-                teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_table_width, teacher_table_height)
-                teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
-                
-                door_width, door_height = 10, 70
-                door_x = center[0] + square_size // 2 - door_width
-                door_y = center[1] + square_size // 2 - door_height - 10
-                draw_door(screen, gray, (door_x, door_y), (door_width, door_height), black, 10)
-                
-                draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
-            
+            draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
+
+            colliders.append(teacher_chair_rect)
+
             #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
         
+        delta_time = time.time() - t
+        t = time.time()
+
+        player_state = common.player_move_update(pg.key.get_pressed(), delta_time, player_state, colliders)
+        draw_square(screen, (255, 0, 0), player_state[0], common.pm_player_size * 2)
+
         pg.display.update()
 
 # == level ==

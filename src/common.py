@@ -30,7 +30,7 @@ pm_accel = 35
 pm_friction = .985
 pm_max_speed = 600
 
-pm_player_size = 15
+pm_player_size = 10
 
 # player movement update, can be reused between levels, returns new vel which should be passed as an argument vel on the next update
 # keys = pygame.keys.pressed()
