@@ -430,6 +430,14 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
                     # score packets
                     
+                    elif packet[0] == "score_ep":
+                        server_state.score_ep = packet[1]
+
+                    elif packet[0] == "land_it":
+                        server_state.score_it = packet[1]
+
+                    # land packets
+                    
                     elif packet[0] == "land_ep":
                         server_state.land_ep = packet[1]
 

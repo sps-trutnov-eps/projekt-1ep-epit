@@ -9,7 +9,7 @@ minigame_lib = {
     "piano": piano.piano,
 }
 
-def switch_to_minigame(name, screen: pygame.Surface):
+def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
     # minigame setup
 
     mini.mini_surface = screen
@@ -24,11 +24,11 @@ def switch_to_minigame(name, screen: pygame.Surface):
     if result == None:
         raise ValueError(f"minigame {name} nevrátil jestli vyhrál/prohrál (`return False` pokud nejde vyhrát ani prohrát, např. automat)")
     elif result == False:
-        pass # minihra nemá wil/fail state (např. automat)
+        return None
 
     elif result.did_win == False: # win
-        netcode.send_packet(client_state.server_conn, (str(score + 100), player_name, protocol_version))
-        netcode.send_packet(client_state.server_conn, (str(land), player_name, protocol_version))
+        netcode.send_packet(client_state.server_conn, (str("score_" + team), int(score + 100), player_name, protocol_version))
+        netcode.send_packet(client_state.server_conn, (str("land_" + team), land.append(room), player_name, protocol_version))
 
     elif result.did_win == True: # fail
-        pass
+        return None

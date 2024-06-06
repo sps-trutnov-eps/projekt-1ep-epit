@@ -121,11 +121,10 @@ def map_level(screen: pygame.Surface, team: int, score: int = 0) -> None:
     land = ["T10"] if team == 0 else ["T7"]
 
     while True:
-        # switch_to_minigame("piano", screen)
+        # switch_to_minigame("piano", "ep" if "T10" in land else "it", room, score, land, screen)
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 return None
-        netcode.send_packet(client_state.server_conn, ("land_ep" if "T10" in land else "land_it", land, player_name, protocol_version))
         update_sprites(sprites, screen, team)
         clock.tick(60)
     
@@ -170,7 +169,7 @@ def main(scene_id: int = 0) -> None:
     netcode.setup_netcode(("127.0.0.1", 15533), "player #1", True, (set_lobby_info, set_result_info))
 
     # simple scene switcher, lobby or level return the index of the next scene (None = exit)
-    
+
     loop_list = [
         lobby,
         level
