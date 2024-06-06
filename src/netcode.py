@@ -249,7 +249,7 @@ def disconnect_as_client():
 # == server state ==
 
 class ServerState:
-    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players"]
+    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players", "score_ep", "score_it", "land_ep", "land_it"]
 
     def __init__(self) -> None:
         # init the server infrastructure
@@ -286,12 +286,12 @@ class ServerState:
     host_players: set[str]
 
     # in-game data
-    score_ep: int
-    score_it: int
-    land_ep: dict
-    land_it: dict
     player_info: dict
     game_state: int
+    score_ep: int
+    score_it: int
+    land_ep: list
+    land_it: list
 
 server_state: ServerState
 server_process: subprocess.Popen # only used when running internal server
