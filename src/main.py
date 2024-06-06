@@ -49,28 +49,53 @@ except Exception as e:
     exit(1)
 
 print("Images loaded successfully.")
+
 def handle_events() -> bool:
     """Events handling function."""
     global walls, y, x
+
     keys = pg.key.get_pressed()
+    move_allowed = True
+
     if keys[pg.K_w]:
         for wall in walls:
-            wall[1] += 20
-        y += 20
+            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
+                move_allowed = False
+                break
+        if move_allowed:
+            y -= 20
+            for wall in walls:
+             wall[1] -= 20
+
     if keys[pg.K_s]:
         for wall in walls:
-            wall[1] -= 20
-        y -= 20
+            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
+                move_allowed = False
+                break
+        if move_allowed:
+            y += 20
+            for wall in walls:
+             wall[1] += 20
 
     if keys[pg.K_a]:
         for wall in walls:
-            wall[0] += 20
-        x += 20
+            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
+                move_allowed = False
+                break
+        if move_allowed:
+            x -= 20
+            for wall in walls:
+                wall[0] -= 20
 
     if keys[pg.K_d]:
         for wall in walls:
-            wall[0] -= 20
-        x -= 20
+            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
+                move_allowed = False
+                break
+        if move_allowed:
+            x += 20
+            for wall in walls:
+                wall[0] += 20
 
     for event in pg.event.get():
         if (event.type == QUIT or
@@ -78,21 +103,27 @@ def handle_events() -> bool:
             return False
     return True
 
+def check_collision(rect1, rect2):
+    return pg.Rect(rect1).colliderect(rect2)
+
 def level(screen: pg.Surface) -> None:
-    """Level function."""
+    global move_allowed
     clock = pg.time.Clock()
     sprites = pg.sprite.Group()
 
     while handle_events():
         sprites.update()
+        move_allowed = True
         screen.fill(BLACK)
         sprites.draw(screen)
         screen.blit(obrazek, (x, y))
         screen.blit(obrazekP, (xp, yp))
-        draw_walls()
+        draw_walls(screen)
         pg.display.update()
         clock.tick(100)
-def draw_walls():
+
+def draw_walls(screen):
+    """Draw walls on the screen."""
     for wall in walls:
         pg.draw.rect(screen, (255, 255, 255), wall)
 
@@ -108,8 +139,6 @@ def init_game() -> pg.Surface:
 def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
-
-    
     level(screen)
 
 if __name__ == '__main__':
