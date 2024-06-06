@@ -59,18 +59,28 @@ questions = [
         "correct_answer": "C"
     },
     {
-        "question": "Jaký brankář byl vyhlášen brankářem s nejmenpším počtem obdržených gólů na zápas?",
+        "question": "Jaký brankář byl vyhlášen brankářem s nejmenpším počtem obdržených gólů na zápas na MS v hokeji 2024?",
         "options": ["A. Leonardo Genoni", "B. Trey Augustine", "C. Samuel Hlavaj", "D. Emil Larmi"],
         "correct_answer": "A"
     },
     {
-        "question": "Jaký hráč byl vyhlášen jako nejlepší ve statistice +/-?",
+        "question": "Jaký hráč byl vyhlášen jako nejlepší ve statistice +/- na MS v hokeji 2024?",
         "options": ["A. Marcus Johansson", "B. Michael Bunting", "C. Colton Parayko", "D. Erik Karlsson"],
         "correct_answer": "A"
     },
     {
-        "question": "Jaký brankář byl vyhlášen jako brankář s nejlepší úspěšnpostí zákroků",
-        "question": ["A. Leonardo Genoni", "B. Alex Lyon", "C. Samuel Hlavaj", "D. Kristers Gudlevskis"],
+        "question": "Jaký brankář byl vyhlášen jako brankář s nejlepší úspěšnpostí zákroků na MS v hokeji 2024?",
+        "options": ["A. Leonardo Genoni", "B. Alex Lyon", "C. Samuel Hlavaj", "D. Kristers Gudlevskis"],
+        "correct_answer": "A"
+    },
+    {
+        "question": "Jaký tým vyhrál bronzovou medaili na MS v hokeji 2024?"
+        "options": ["A. Švédsko", "B. Lotyšsko", "C. Česko", "D. USA"]
+        "correct_answer": "A"
+    },
+    {
+        "question": "Jaký tým vyhrál zlatou medaili na MS v hokeji 2024?"
+        "options": ["A. Česko", "B. Kanada", "C. Finsko", "D. Švédsko"]
         "correct_answer": "A"
     }
 ]
