@@ -19,6 +19,10 @@ car_rect = car_image.get_rect()
 car_pos_x = 500
 car_pos_y = 500
 
+tree_path = "./obrazky racegame/backgroundTree.png"
+tree_image = pygame.image.load(tree_path)
+scaled_tree = pygame.transform.scale(tree_image, (70, 30))
+tree_rect = scaled_tree.get_rect()
 # Car starting angle
 car_angle = 0
 
@@ -41,7 +45,6 @@ obstacles = [
     pygame.Rect(800, 0, 300, 100),
     pygame.Rect(800, 0, 100, 200),
     pygame.Rect(200, 100, 700, 100),
-    pygame.Rect(200, 200, 100, 400)
 ]
 
 # Define speed of the formula
@@ -53,7 +56,7 @@ button_text = button_font.render('Start Game', True, (255, 255, 255))
 button_rect = button_text.get_rect(center=(window_width / 2, window_height / 2))
 
 # Define the lap completion point (e.g., crossing the start line at y=100)
-lap_completion_rect = pygame.Rect(500, 90, 200, 20)  # Adjust as needed
+lap_completion_rect = pygame.Rect(200, 100, 20, 100)  # Adjust as needed
 
 def main_menu():
     while True:
@@ -71,14 +74,14 @@ def main_menu():
         clock.tick(60)
 
 def game_loop():
-    global car_pos_x, car_pos_y, car_angle
+    global car_pos_x, car_pos_y, car_angle, tree_image, tree_rect
 
     start_time = time.time()
     lap_completed = False
 
     while True:
         elapsed_time = time.time() - start_time
-        if elapsed_time > 60:  # Check if more than 60 seconds have passed
+        if elapsed_time > 20:  # Check if more than 60 seconds have passed
             pygame.quit()
             sys.exit()
 
@@ -86,7 +89,7 @@ def game_loop():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
+        
         window.fill((79, 121, 66))
 
         # Draw obstacles
@@ -94,7 +97,7 @@ def game_loop():
             pygame.draw.rect(window, (128, 128, 128), obstacle)
 
         # Draw lap completion line
-        pygame.draw.rect(window, (255, 0, 0), lap_completion_rect)
+        pygame.draw.rect(window, (0, 0, 0), lap_completion_rect)
 
         # Rotate the car
         keys = pygame.key.get_pressed()
@@ -118,7 +121,9 @@ def game_loop():
             if within_bounds:
                 car_pos_x = new_pos_x
                 car_pos_y = new_pos_y
-
+        
+        window.blit(scaled_tree, (100, 100))
+        
         # Check if the car crosses the lap completion line
         if lap_completion_rect.collidepoint(car_pos_x, car_pos_y):
             lap_completed = True
@@ -144,7 +149,9 @@ def game_loop():
 
         pygame.display.flip()
         clock.tick(300)  # Keep FPS at 60
-
+        
+       
+        
         # Slow down the formula movement
         pygame.time.delay(int(1000 / 60 * formula_speed))  # 60 FPS equivalent delay with speed adjustment
 
