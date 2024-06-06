@@ -70,6 +70,7 @@ ctverec_na_kliknuti = None
 odpočet = 3
 odpočet_start = False
 čas_startu_odpočtu = 0
+sekvence = []
 
 # Funkce pro zobrazení akce
 def zobraz_akci(index):
@@ -84,6 +85,14 @@ def zobraz_akci(index):
     for i, ctverec in enumerate(ctverce):
         pygame.draw.rect(okno, barvy[i], ctverec)
     pygame.display.update()
+
+# Funkce pro generování nové sekvence
+def nova_sekvence():
+    index = random.randint(0, 8)
+    sekvence.append(index)
+    for i in sekvence:
+        zobraz_akci(i)
+        pygame.time.delay(500)
 
 # Hlavní smyčka
 while True:
@@ -124,9 +133,9 @@ while True:
             pygame.display.update()
             pygame.time.delay(2000)
             hrajeme_hru = True
-            index = random.randint(0, 8)
-            zobraz_akci(index)
-            ctverec_na_kliknuti = index
+            sekvence = []
+            nova_sekvence()
+            ctverec_na_kliknuti = 0
 
     # Vykreslení obrazu
     if not hrajeme_hru and not odpočet_start:
@@ -148,11 +157,15 @@ while True:
                     sys.exit()
                 elif udalost.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    if ctverce[ctverec_na_kliknuti].collidepoint(mouse_pos):
-                        zobraz_akci(ctverec_na_kliknuti)
-                        pygame.time.delay(2000)
+                    if ctverce[sekvence[ctverec_na_kliknuti]].collidepoint(mouse_pos):
+                        zobraz_akci(sekvence[ctverec_na_kliknuti])
+                        ctverec_na_kliknuti += 1
+                        if ctverec_na_kliknuti >= len(sekvence):
+                            pygame.time.delay(1000)
+                            nova_sekvence()
+                            ctverec_na_kliknuti = 0
+                    else:
                         hrajeme_hru = False
                         ctverec_na_kliknuti = None
 
     pygame.display.update()
-
