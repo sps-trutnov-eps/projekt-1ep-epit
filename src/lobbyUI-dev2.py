@@ -47,7 +47,7 @@ while running:
     spacing = 40
     gap = 5
     vertical_offset = -40
-    horizontal_offset = -10 
+    horizontal_offset = -40 
     
     start_x = center[0] - (cols * (table_width + spacing) / 2) + (table_width / 2) + horizontal_offset
     start_y = center[1] - (cols * (table_height + chair_height + spacing) / 2) + chair_height + (table_height / 2) + vertical_offset
@@ -58,6 +58,19 @@ while running:
             table_y = start_y + row * (table_height + chair_height + spacing)
             table_rect = (table_x, table_y, table_width, table_height)
             draw_table_and_chairs(screen, light_brown, light_brown, table_rect, (chair_width, chair_height), gap)
+            
+            teacher_table_width, teacher_table_height = 40, 40
+            teacher_chair_width, teacher_chair_height = 35, 35
+            
+            teacher_table_x = center[0] - square_size // 2 + 10
+            teacher_table_y = center[1] + square_size // 2 - teacher_table_height - 10
+            teacher_chair_x = teacher_table_x + (teacher_table_width - teacher_table_width) // 2
+            teacher_chair_y = teacher_table_y - teacher_chair_height - 5
+            
+            teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_chair_width, teacher_chair_height)
+            teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
+            
+            draw_table_and_chairs(screen, light_brown, light_brown, teacher_table_rect, (teacher_chair_width, teacher_chair_height), gap)
     
     pygame.display.flip()
     
