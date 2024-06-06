@@ -47,10 +47,10 @@ while True:
         
         stisknute_klavesy = pygame.key.get_pressed()
         okno.fill((190, 190, 190))
-        draw_text('Klikáním na přeskáčku na ', text_font, (255,0,0), 10, 50)
-        draw_text('Šipky nahoru a dolu vyhraj', text_font, (255,0,0), 10, 100)
-        draw_text('Dostaň čáru do prava', text_font, (255,0,0), 10, 150)
-        draw_text('Nenech IT dostat čáru do leva', text_font, (255,0,0), 10, 200)
+        draw_text('Klikáním na přeskáčku na ', text_font, (255,0,100), 10, 50)
+        draw_text('Šipky nahoru a dolu vyhraj', text_font, (255,0,100), 10, 100)
+        draw_text('Dostaň čáru do prava', text_font, (255,0,100), 10, 150)
+        draw_text('Nenech IT dostat čáru do leva', text_font, (255,0,100), 10, 200)
         draw_text('Hru zapneš stisknutím Šipky nahoru nebo dolu ', text_font2, (0,155,0), 10, 565)
         
         

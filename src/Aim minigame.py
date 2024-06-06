@@ -27,6 +27,7 @@ cursor_index = 1
 pg.mouse.set_cursor(cursors[cursor_index])
 
 text_font = pg.font.SysFont('Arial', 50)
+text_font2 = pg.font.SysFont('Arial', 70)
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -43,45 +44,79 @@ dotyk = math.sqrt((pozice[0]-stred_x)**2+(pozice[1]+stred_y)**2)
 fake_stred = bod_x + bod_y + velikost_kruhu
 body = 0
 cas = 0
+cas1 = 0
+tutorial = 1
+
 
 
 
 
 while True:
     for udalost in pg.event.get():
-        if udalost.type == pg.QUIT :
+        if udalost.type == pg.QUIT:
             pg.quit()
             sys.exit()
     
-    stisknute_klavesy = pg.key.get_pressed()
-    if stisknute_klavesy[pg.K_ESCAPE]:
-        pg.quit()
-        sys.exit()
     
-    pozice = pg.mouse.get_pos()
-    dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]-stred_y)**(2))
-    
-    
-    
-    if dotyk <= 27 and udalost.type == pg.MOUSEBUTTONDOWN :
-       body += 1
-       bod_x = random.randrange(0, 800 - velikost_kruhu)
-       bod_y = random.randrange(0, 600 - velikost_kruhu)
-       stred_x = bod_x + velikost_kruhu/2
-       stred_y = bod_y + velikost_kruhu/2
-       fake_stred = bod_x + bod_y + velikost_kruhu
-       
-       
-   
-    
-    cas = pg.time.get_ticks()/1000
-    rncas = round(cas, 1)
-    
-    
-    okno.fill((100,200,36))
-    draw_text(str(body), text_font, (255,0,0), 10, 550)
-    draw_text(str(rncas), text_font, (255,0,0), 10, 1)
-    
-    pg.draw.ellipse(okno, (100,28,0), (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
+
+
+    if tutorial == 1:
+        if udalost.type == pg.QUIT:
+            pg.quit()
+            sys.exit()
+            
+        okno.fill((100,200,100))
+        draw_text(("AIM test"), text_font2, (155,0,100), 300, 0)
+        draw_text(("klikej na hnědý koule"), text_font2, (255,0,100), 0, 75)
+        draw_text(("naklikej 25 bodů"), text_font2, (255,0,100), 0, 150)
+        draw_text(("než dá timer 25sekund"), text_font2, (255,0,100), 0, 225)
+        draw_text(("hru zapneš kliknutím myši kamkoli"), text_font, (255,0,100), 0, 550)
         
-    pg.display.update()
+        if udalost.type == pg.MOUSEBUTTONDOWN:
+            tutorial = 0
+            
+        
+        
+        
+        pg.display.update()
+        
+    else:
+    
+        pozice = pg.mouse.get_pos()
+        dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]-stred_y)**(2))
+        
+        
+        
+        if dotyk <= 27 and udalost.type == pg.MOUSEBUTTONDOWN :
+           body += 1
+           bod_x = random.randrange(0, 800 - velikost_kruhu)
+           bod_y = random.randrange(0, 600 - velikost_kruhu)
+           stred_x = bod_x + velikost_kruhu/2
+           stred_y = bod_y + velikost_kruhu/2
+           fake_stred = bod_x + bod_y + velikost_kruhu
+           
+           
+       
+        
+        cas += 0.00076      
+        rncas = round(cas, 1)
+        
+        
+        if body == 25:
+            print('vyhrál jsi')
+            sys.exit()
+            
+        if rncas >= 25:
+            print('prohrál jsi')
+            sys.exit()
+        
+        
+        okno.fill((100,200,100))
+        
+        draw_text(str(body), text_font, (0,0,255), 365, 275)
+        draw_text(str(rncas), text_font, (255,0,0), 350, 325)
+        
+        
+        pg.draw.ellipse(okno, (100,28,0), (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
+            
+        pg.display.update()
