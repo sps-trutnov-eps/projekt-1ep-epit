@@ -243,6 +243,28 @@ def init_game() -> pg.Surface:
     pg.display.set_caption('Game')
     return screen
 
+def p_test(screen: pg.Surface) -> int:
+    p_state = ([0, 0], [0, 0])
+
+    wall_rect = (100, 100, 50, 50)
+    
+    import time
+
+    t1 = time.time()
+
+    while handle_events():
+        screen.fill(BLACK)
+
+        delta_time = time.time() - t1
+        t1 = time.time()
+
+        p_state = common.player_move_update(pg.key.get_pressed(), delta_time, p_state, [wall_rect])
+        pg.draw.rect(screen, (255, 0, 0), (p_state[0][0] - common.pm_player_size, p_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2))
+        
+        pg.draw.rect(screen, (0, 255, 0), wall_rect)
+
+        pg.display.update()
+
 def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
@@ -251,6 +273,7 @@ def main(scene_id: int = 0) -> None:
         # simple scene switcher, lobby or level return the index of the next scene (None = exit)
 
         loop_list = [
+            p_test,
             main_menu,
             lobby,
             level
