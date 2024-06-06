@@ -36,7 +36,7 @@ walls = [
 x = 0
 y = 0
 xp = 500
-yp = 0
+yp = 500
 
 file_path = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (3).png")
 file_path2 = os.path.join(os.path.dirname(__file__), "pixil-frame-0 (5).png")
@@ -63,9 +63,9 @@ def handle_events() -> bool:
                 move_allowed = False
                 break
         if move_allowed:
-            y -= 20
+            y += 20
             for wall in walls:
-             wall[1] -= 20
+             wall[1] += 20
 
     if keys[pg.K_s]:
         for wall in walls:
@@ -73,21 +73,11 @@ def handle_events() -> bool:
                 move_allowed = False
                 break
         if move_allowed:
-            y += 20
+            y -= 20
             for wall in walls:
-             wall[1] += 20
+             wall[1] -= 20
 
     if keys[pg.K_a]:
-        for wall in walls:
-            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
-                move_allowed = False
-                break
-        if move_allowed:
-            x -= 20
-            for wall in walls:
-                wall[0] -= 20
-
-    if keys[pg.K_d]:
         for wall in walls:
             if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
                 move_allowed = False
@@ -96,6 +86,16 @@ def handle_events() -> bool:
             x += 20
             for wall in walls:
                 wall[0] += 20
+
+    if keys[pg.K_d]:
+        for wall in walls:
+            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
+                move_allowed = False
+                break
+        if move_allowed:
+            x -= 20
+            for wall in walls:
+                wall[0] -= 20
 
     for event in pg.event.get():
         if (event.type == QUIT or
