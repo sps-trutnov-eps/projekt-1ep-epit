@@ -49,8 +49,8 @@ questions = [
         "correct_answer": "B"
     },
     {
-        "question": "Kteří tři hráčí, kteří nebyli vyhlášeni hráči MS v hokeji 2024 na své pozici byli vybrání do All-Star týmu MS v hokeji 2024?",
-        "options": ["A. Erik Karlsson, Dylan Cozens a Roman Červenka", "B. Owen Power, Roman Červenka a Matt Boldy", "C. Oliwer Kaski, Roman Červenka a Dylan Cozens", "D. Lukas Kälble, Evan Mosey a Matt Boldy"],
+        "question": "Jaké bylo složení All-Star týmu na MS v hokeji 2024:",
+        "options": ["A. Kevin Fiala, Roman Červenka, Dylan Cozens, Erik Karlsson, Roman Josi, Lukáš Dostál", "B. JJ Peterka, Matt Boldy, Roman Červenka, Owen Power, Lukas Kälble, Kristers Gudlevskis", "C. Oliver Kapanen, Dylan Cozens, Roman Červenka, Oliwer Kaski, Zach Werenski, Emil Larmi", "D. Dylan Cozens, Matt Boldy, Evan Mosey, Lukas Kälble, Jonas Müller, Emil Larmi"],
         "correct_answer": "A"
     },
     {
@@ -94,9 +94,18 @@ questions = [
         "correct_answer": "C"
     },
     {
-        "question": "Jaký hráč dal nejvíc gólů na MS v hokeji 2024?"
-        "options" ["A. Joel Eriksson Ek", "B. Lukáš Sedlák", "C. Dylan Cozens", "D. Evan Mosey"]
+        "question": "Jaký hráč dal nejvíc gólů na MS v hokeji 2024?",
+        "options": ["A. Joel Eriksson Ek", "B. Lukáš Sedlák", "C. Dylan Cozens", "D. Evan Mosey"],
         "correct_answer": "C"
+    },
+    {
+        "question": "Jaký obránce dal nejvíc gólů na MS v hokeji 2024?",
+        "options": ["A. Marcus Johansson", "B. Roman Josi", "C. Šimon Nemec", "D. Erik Karlsson"],
+        "correct_answer": "D"
+    },
+    {
+        "question": "Jaký hráč měl nejvíc trestných minut na MS v hokeji 2024?",
+        "options": ["A. Oskars Batna", "B. "]
     }
 ]
 
