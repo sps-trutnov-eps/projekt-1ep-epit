@@ -74,13 +74,13 @@ questions = [
         "correct_answer": "A"
     },
     {
-        "question": "Jaký tým vyhrál bronzovou medaili na MS v hokeji 2024?"
-        "options": ["A. Švédsko", "B. Lotyšsko", "C. Česko", "D. USA"]
+        "question": "Jaký tým vyhrál bronzovou medaili na MS v hokeji 2024?",
+        "options": ["A. Švédsko", "B. Lotyšsko", "C. Česko", "D. USA"],
         "correct_answer": "A"
     },
     {
-        "question": "Jaký tým vyhrál zlatou medaili na MS v hokeji 2024?"
-        "options": ["A. Česko", "B. Kanada", "C. Finsko", "D. Švédsko"]
+        "question": "Jaký tým vyhrál zlatou medaili na MS v hokeji 2024?",
+        "options": ["A. Česko", "B. Kanada", "C. Finsko", "D. Švédsko"],
         "correct_answer": "A"
     }
 ]
