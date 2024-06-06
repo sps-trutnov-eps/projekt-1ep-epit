@@ -52,6 +52,52 @@ print("Images loaded successfully.")
 
 def handle_events() -> bool:
     """Events handling function."""
+    global x, y, walls
+
+    keys = pg.key.get_pressed()
+
+    if keys[pg.K_w]:
+        for wall in walls:
+            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
+                y -= 20
+                wall[1] -= 20
+        y += 20
+        for wall in walls:
+            wall[1] += 20
+    if keys[pg.K_s]:
+        for wall in walls:
+            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
+                y += 20
+                wall[1] += 20
+        y -= 20
+        for wall in walls:
+            wall[1] -= 20
+    if keys[pg.K_a]:
+        for wall in walls:
+            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
+                x -= 20
+                wall[0] -= 20
+        x += 20
+        for wall in walls:
+            wall[0] += 20
+
+    if keys[pg.K_d]:
+        for wall in walls:
+            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
+                x += 20
+                wall[0] += 20
+        x -= 20
+        for wall in walls:
+            wall[0] -= 20
+
+    for event in pg.event.get():
+        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+            return False
+
+    return True
+
+def handle_events() -> bool:
+    """Events handling function."""
     global walls, y, x
 
     keys = pg.key.get_pressed()
