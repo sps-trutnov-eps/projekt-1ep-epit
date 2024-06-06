@@ -29,7 +29,7 @@ pg.mouse.set_cursor(cursors[cursor_index])
 
 pozice = (1,1)
 bod_x = 300
-bod_y = 10
+bod_y = 300
 velikost_kruhu = 50
 stred_x = bod_x + velikost_kruhu/2
 stred_y = bod_y + velikost_kruhu/2
@@ -53,14 +53,14 @@ while True:
         sys.exit()
     
     pozice = pg.mouse.get_pos()
-    dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]+stred_y)**(2))
+    dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]-stred_y)**(2))
     
     
     
-    if dotyk <= stred[0] + velikost_kruhu/2 and dotyk >= stred[0] - velikost_kruhu/2 and dotyk <= stred[1] + velikost_kruhu/2 and dotyk >= stred[1] - velikost_kruhu/2 and udalost.type == pg.MOUSEBUTTONDOWN :
+    if dotyk <= 26 and udalost.type == pg.MOUSEBUTTONDOWN :
        body + 1
-       bod_x = random.randrange(0, 800)
-       bod_y = random.randrange(0, 600)
+       bod_x = random.randrange(0, 800 - velikost_kruhu)
+       bod_y = random.randrange(0, 600 - velikost_kruhu)
        stred_x = bod_x + velikost_kruhu/2
        stred_y = bod_y + velikost_kruhu/2
        fake_stred = bod_x + bod_y + velikost_kruhu
