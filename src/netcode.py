@@ -192,7 +192,7 @@ def change_team(index: int):
 # note: called by the server!!!
 def game_end():
     server_state.game_state = 0
-    
+
     print("server: ending game...")
 
 def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks: list) -> tuple[bool, str | None]:
@@ -433,7 +433,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     elif packet[0] == "score_ep":
                         server_state.score_ep = packet[1]
 
-                    elif packet[0] == "land_it":
+                    elif packet[0] == "score_it":
                         server_state.score_it = packet[1]
 
                     # land packets
