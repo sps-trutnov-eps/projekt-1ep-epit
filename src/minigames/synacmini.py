@@ -82,6 +82,21 @@ questions = [
         "question": "Jaký tým vyhrál zlatou medaili na MS v hokeji 2024?",
         "options": ["A. Česko", "B. Kanada", "C. Finsko", "D. Švédsko"],
         "correct_answer": "A"
+    },
+    {
+        "question": "Jaký hráč měl nejvíc asistencí na MS v Hokeji 2024?",
+        "options": ["A. Libor Hudáček", "B. Mats Zuccarello", "C. Rasmus Dahlin", "D. John Tavares"],
+        "correct_answer": "D"
+    },
+    {
+        "question": "Jaký obránce měl nejvíc asistencí na MS v hokeji 2024?",
+        "options": ["A. Oliwer Kaski", "B. David Špaček", "C. Roman Josi", "D. Zach Werenski"],
+        "correct_answer": "C"
+    },
+    {
+        "question": "Jaký hráč dal nejvíc gólů na MS v hokeji 2024?"
+        "options" ["A. Joel Eriksson Ek", "B. Lukáš Sedlák", "C. Dylan Cozens", "D. Evan Mosey"]
+        "correct_answer": "C"
     }
 ]
 
