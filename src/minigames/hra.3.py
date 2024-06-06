@@ -7,7 +7,7 @@ pygame.init()
 x_hrac = 85
 y_hrac = 20
 
-rychlost_hrace = 0.075
+rychlost_hrace = 0.085
 
 x_zed_1 = 0
 y_zed_1 = 0
