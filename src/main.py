@@ -190,6 +190,7 @@ def lobby(screen: pg.Surface) -> int:
     gray = (169, 169, 169)
     light_brown = (205, 133, 63)
     blue = (0, 0, 255)
+    dark_gray = (50, 50, 50)
     
     def draw_table_and_chairs(surface, table_color, chair_color, table_rect, chair_size, gap):
         pg.draw.rect(surface, table_color, table_rect)
@@ -206,7 +207,12 @@ def lobby(screen: pg.Surface) -> int:
         
     def draw_teacher_table_and_chair(surface, table_color, chair_color, table_rect, chair_rect):
         pg.draw.rect(surface, table_color, table_rect)
-        pg.draw.rect(surface, chair_color, chair_rect) 
+        pg.draw.rect(surface, chair_color, chair_rect)
+    
+    def draw_door(surface, color, position, size, knob_color, knob_radius):
+        pg.draw.rect(surface, color, pg.Rect(position, size))
+        knob_position = (position[0] + size[0] - knob_radius, position[1] + knob_radius)
+        pg.draw.circle(surface, knob_color, knob_position, 3)
         
     running = True
     
@@ -235,7 +241,7 @@ def lobby(screen: pg.Surface) -> int:
         center = (400, 300)
         square_size = 550
         
-        draw_square(screen, gray, center, square_size + 20)
+        draw_square(screen, dark_gray, center, square_size + 20)
         draw_square(screen, brown, center, square_size)
         
         table_width, table_height = 60, 30
@@ -272,6 +278,11 @@ def lobby(screen: pg.Surface) -> int:
                 
                 teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_table_width, teacher_table_height)
                 teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
+                
+                door_width, door_height = 10, 70
+                door_x = center[0] + square_size // 2 - door_width
+                door_y = center[1] + square_size // 2 - door_height - 10
+                draw_door(screen, gray, (door_x, door_y), (door_width, door_height), black, 10)
                 
                 draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
             
