@@ -13,7 +13,7 @@ y = 0
 player_number = 4
 # sem bychom jsme si mohli brat cislo hrace podle toho kolikaty se napoji do lobicka
 
-obrazek = pg.image.load("pixil-frame-0 (3).png")
+obrazek_patra = pg.image.load("1-patro.png")
 obrazekP = pg.image.load("red-hustler.png")
 
 class Player():
@@ -82,7 +82,7 @@ def druhy_patro(screen: pg.Surface) -> None:
     while handle_events():
         sprites.update()
         sprites.draw(screen)
-        screen.blit(obrazek, (x, y))
+        screen.blit(obrazek_patra, (x, y))
         player.choose_image()
         player.keep_in_center(SCREEN_WIDTH, SCREEN_HEIGHT)
         player.display_player(screen)    
