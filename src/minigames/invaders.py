@@ -25,9 +25,9 @@ def load_image(image_path, scale=(64, 64)):
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-player_img = load_image(os.path.join(current_dir, 'player.png'), scale=(128, 128))
-enemy_img = load_image(os.path.join(current_dir, 'enemy.png'), scale=(96, 96))
-bullet_img = load_image(os.path.join(current_dir, 'bullet.png'), scale=(32, 32))
+player_img = load_image(os.path.join(current_dir, '../player.png'), scale=(128, 128))
+enemy_img = load_image(os.path.join(current_dir, '../enemy.png'), scale=(96, 96))
+bullet_img = load_image(os.path.join(current_dir, '../bullet.png'), scale=(32, 32))
 
 player_x = 480
 player_y = 680
