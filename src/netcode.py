@@ -397,13 +397,23 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 while True:
                     read_sockets, _, _ = select.select((self.request,), tuple(), tuple(), 0)
 
-                    if len(read_sockets) == 0 or len(packets) > 2: # len > 2 to avoid infinitely reading client packets without processing them
+                    if len(read_sockets) == 0:
+                        break
+
+                    if len(packets) > 32: # check to avoid infinitely reading client packets without processing them, backlog reached at this point, server surenders and can't keep up, things WILL get out of sync
+                        print(f"server: can't keep up! over 32 packets in a single tick from client \"{player_name}\"!")
                         break
 
                     for sock in read_sockets:
                         # receive and parse packets from tcp stream
 
-                        packets.append(read_packet(sock))
+                        p = read_packet(sock)
+
+                        if len(packets) > 16: # danger of packet backlog, start ignoring noisy update packets (will cause visual lags of this client for others)
+                            if p[0] == "c_player_info" or p[0] == "ping":
+                                continue
+
+                        packets.append(p)
 
                 # == process client packets ==
 
