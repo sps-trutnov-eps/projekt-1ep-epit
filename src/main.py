@@ -149,7 +149,7 @@ def main_menu(screen: pg.Surface) -> int:
 
     # connect to server
 
-    netcode.setup_netcode((session_info[0], 15533), session_info[1], True if session_info[2] == 2 else False, (set_lobby_info, set_result_info))
+    netcode.setup_netcode((session_info[0], 15533), session_info[1], True if session_info[2] == 2 else False, (set_lobby_info, set_result_info, set_player_info, set_game_score))
 
     return 1 # switch scene to lobby
 
@@ -175,7 +175,7 @@ lobby_info: dict[str, list[int]] = None
 # game result data (TODO)
 result_info = None
 
-def set_lobby_info(lobby: list):
+def set_lobby_info(lobby: dict):
     global lobby_info
     lobby_info = lobby
 
@@ -313,6 +313,17 @@ def lobby(screen: pg.Surface) -> int:
         pg.display.update()
 
 # == level ==
+
+player_info: dict[str, list] | None = None
+game_score: None = None # TODO: set type
+
+def set_player_info(players: dict):
+    global player_info
+    player_info = players
+
+def set_game_score(score: list):
+    global game_score
+    game_score = score
 
 def level(screen: pg.Surface) -> int:
     """Level function."""
