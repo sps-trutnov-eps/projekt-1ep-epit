@@ -307,19 +307,42 @@ def lobby(screen: pg.Surface) -> int:
         delta_time = time.time() - t
         t = time.time()
 
+        # temp color squares, would be replaced with skins if implemented
+
         player_state = common.player_move_update(pg.key.get_pressed(), delta_time, player_state, colliders)
         draw_square(screen, (255, 0, 0), player_state[0], common.pm_player_size * 2)
+
+        netcode.update_player_info(player_state[0], player_state[1])
+
+        pred_time = (time.time() - player_info_age) * .9
+
+        if not player_info == None:
+            for name, p in player_info.items():
+                if name == session_info[1]: # do not render the local player
+                    continue
+                
+                # TODO: prediction can be improved
+
+                # pred_p = common.player_move_update({}, pred_time, (p[0], p[1]), colliders)
+                pred_p = (p[0][0] + p[1][0] * pred_time, p[0][1] + p[1][1] * pred_time) # simple velocity add
+
+                draw_square(screen, (0, 255, 0), pred_p, common.pm_player_size * 2)
 
         pg.display.update()
 
 # == level ==
 
 player_info: dict[str, list] | None = None
+player_info_age: float = 0
+
 game_score: None = None # TODO: set type
 
 def set_player_info(players: dict):
     global player_info
+    global player_info_age
+
     player_info = players
+    player_info_age = time.time()
 
 def set_game_score(score: list):
     global game_score
