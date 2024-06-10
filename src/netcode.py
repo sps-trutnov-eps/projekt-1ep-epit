@@ -58,7 +58,7 @@ class ClientState:
     on_game_result: Callable
 
     on_player_info: Callable
-    on_game_score: Callable # TODO: for Pavel, add a function to hooks[3] to `netcode.netcode_setup()` in `main()` that will receive packet[2] from s_game_tick
+    on_game_score: Callable
 
     # note: a random player can become a host when the current host disconnects (aka this value can change)
     is_host: bool
@@ -376,9 +376,13 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
         print(f"server: client {player_name} connected!")
 
+        target_ticktime = (1 / 20) # ideal ~20 TPS target
+
         # client io loop
         while True:
             # update client handler
+
+            t = time.time()
 
             if len(server_state.host_players) == 0: # always at least one person must be a "host" player
                 server_state.host_players.add(player_name)
@@ -393,7 +397,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 while True:
                     read_sockets, _, _ = select.select((self.request,), tuple(), tuple(), 0)
 
-                    if len(read_sockets) == 0:
+                    if len(read_sockets) == 0 or len(packets) > 2: # len > 2 to avoid infinitely reading client packets without processing them
                         break
 
                     for sock in read_sockets:
@@ -497,6 +501,11 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 client_lobby_hash = lob_hash
 
                 send_packet(self.request, ("s_game_event", "lobby_update", server_state.lobby))
+
+            delta_time = time.time() - t
+
+            # throttle io loop if server is too fast
+            time.sleep(max(0, target_ticktime - delta_time))
 
 # starts the server python thread in the backgound
 def start_server():
