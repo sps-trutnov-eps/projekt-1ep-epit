@@ -322,6 +322,7 @@ def server_handle_disconnect(player):
     print(f"server: client {player} disconnected")
 
     server_state.lobby.pop(player)
+    server_state.player_info.pop(player, None)
     server_state.host_players.discard(player)
 
 def server_handle_connect(req: socket.socket) -> list | None:
