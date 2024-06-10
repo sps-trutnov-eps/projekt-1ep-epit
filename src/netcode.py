@@ -15,7 +15,7 @@ from typing import Callable
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 12
+protocol_version = 13
 packet_len_bytes = 2
 
 # == client state ==
@@ -209,8 +209,8 @@ def change_team(index: int):
 
     send_packet(client_state.server_conn, ("c_change_team", index))
 
-def update_player_info(pos):
-    send_packet(client_state.server_conn, ("c_player_info", pos, None))
+def update_player_info(pos: list[float], vel: list[float]):
+    send_packet(client_state.server_conn, ("c_player_info", pos, vel))
 
 # note: called only by the server!!!
 def game_end():
@@ -423,7 +423,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     # player packets
 
                     elif packet[0] == "c_player_info":
-                        server_state.player_info[player_name] = packet[1]
+                        server_state.player_info[player_name] = [packet[1], packet[2]]
 
                     # host packets
 
@@ -462,20 +462,21 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
             
             # == send server packets to client ==
 
-            # only send ticks in-game
-            if server_state.game_state == 1:
-                game_tick = ("s_game_tick", {}, {})
+            game_tick = ("s_game_tick", {}, {})
 
-                # player updates (position, held item, etc.)
+            # player updates (position, held item, etc.)
 
-                for name, p in server_state.player_info.items():
-                    game_tick[1][name] = (p[0], p[1])
+            for name, p in server_state.player_info.items():
+                game_tick[1][name] = (p[0], p[1])
                 
+            if server_state.game_state == 1:
                 # game score
 
                 game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+            else:
+                game_tick[2]["game_score"] = None # no score updates when in lobby
 
-                send_packet(self.request, game_tick)
+            send_packet(self.request, game_tick)
 
             # check for changed synced data
 
