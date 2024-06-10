@@ -280,29 +280,30 @@ def lobby(screen: pg.Surface) -> int:
                 
                 colliders.append(table_rect)
 
-            teacher_table_width, teacher_table_height = 35, 25 #je to naopak, table width, height zaznamenává velikost židle a chair width, height zaznamenává velikost stolu
-            teacher_chair_width, teacher_chair_height = 100, 40
-                    
-            teacher_table_x = center[0] - square_size // 2 + 10
-            teacher_table_y = center[1] + square_size // 2 - teacher_table_height - 10
+        teacher_table_width, teacher_table_height = 35, 25 #je to naopak, table width, height zaznamenává velikost židle a chair width, height zaznamenává velikost stolu
+        teacher_chair_width, teacher_chair_height = 100, 40
                 
-            teacher_chair_x = teacher_table_x + (teacher_table_width - teacher_table_width) // 2
-            teacher_chair_y = teacher_table_y - teacher_chair_height - 5
-                
-            teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_table_width, teacher_table_height)
-            teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
-                
-            door_width, door_height = 10, 70
-            door_x = center[0] + square_size // 2 - door_width
-            door_y = center[1] + square_size // 2 - door_height - 10
-            draw_door(screen, gray, (door_x, door_y), (door_width, door_height), black, 10)
-                
-            draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
+        teacher_table_x = center[0] - square_size // 2 + 10
+        teacher_table_y = center[1] + square_size // 2 - teacher_table_height - 10
+            
+        teacher_chair_x = teacher_table_x + (teacher_table_width - teacher_table_width) // 2
+        teacher_chair_y = teacher_table_y - teacher_chair_height - 5
+            
+        teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_table_width, teacher_table_height)
+        teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
+            
+        door_width, door_height = 10, 70
+        door_x = center[0] + square_size // 2 - door_width
+        door_y = center[1] + square_size // 2 - door_height - 10
+        draw_door(screen, gray, (door_x, door_y), (door_width, door_height), black, 10)
+            
+        draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
+        colliders.append(teacher_chair_rect)
 
-            colliders.append(teacher_chair_rect)
-
-            #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
+        #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
         
+        # updates the delta (frame) time and player movement
+
         delta_time = time.time() - t
         t = time.time()
 
@@ -343,8 +344,8 @@ def p_test(screen: pg.Surface) -> int:
     wall_rects = [
         (100, 100, 50, 50),
         (100, 200, 20, 50),
-        (300, 100, 20, 20),
-        (100, 100, 50, 50),
+        (300, 200, 20, 20),
+        (200, 200, 50, 50),
         (100, 510, 51, 50),
         (300, 100, 51, 20),
     ]
