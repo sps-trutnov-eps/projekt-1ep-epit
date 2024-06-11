@@ -4,41 +4,52 @@ import random
 import time
 pygame.init()
 
+x_hrac = 85
+y_hrac = 20
+
+rychlost_hrace = 0.085
+
+x_zed_1 = 0
+y_zed_1 = 0
+
+x_zed_2 = 120
+y_zed_2 = 0
+
+x_zed_3 = 60
+y_zed_3 = 180
+
+x_zed_4 = 0
+y_zed_4 = 400
+
+x_zed_5 = 220
+y_zed_5 = 0
+
+x_zed_6 = 330
+y_zed_6 = 0
+
+x_zed_7 = 215
+y_zed_7 = 600
+
+x_zed_8 = 0
+y_zed_8 = 770
+
+x_zed_9 = 830
+y_zed_9 = 250
+
+x_zed_10 = 543
+y_zed_10 = 383
+
+x_zed_11 = 823
+y_zed_11 = 150
+
+x_zed_12 = 0
+y_zed_12 = 0
+
+zivoty = 3
+
 # Velikost okna
-rozliseni_okna = (1000, 1000)
+rozliseni_okna = (1000, 800)
 okno = pygame.display.set_mode(rozliseni_okna)
-
-x_hrac = 740
-y_hrac = 930
-rychlost_hrace = 1.5
-
-x_zem = 0
-y_zem = 950
-
-nep_y1 = 0
-nep_y2 = 0
-nep_y3 = 0
-nep_y4 = 0
-nep_y5 = 0
-
-gravitace_1 = 0.01
-gravitace_2 = 0.0035
-gravitace_3 = 0.02
-gravitace_4 = 0.0075
-gravitace_5 = 0.02
-
-nep_rychlost1 = 0
-nep_rychlost2 = 0
-nep_rychlost3 = 0
-nep_rychlost4 = 0
-nep_rychlost5 = 0
-
-pozice_nep_x_1 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-pozice_nep_x_2 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-pozice_nep_x_3 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-pozice_nep_x_4 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-pozice_nep_x_5 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-
 
 while True:
     # ovladani
@@ -46,94 +57,106 @@ while True:
         if udalost.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-           
-          
     # logika
+    
+    if zivoty <= 0:
+        pygame.quit()
+        sys.exit()
+        
     stisknute_klavesy = pygame.key.get_pressed()
     
     if stisknute_klavesy[pygame.K_RIGHT]: 
         x_hrac += rychlost_hrace
     if stisknute_klavesy[pygame.K_LEFT]: 
         x_hrac -= rychlost_hrace
+    if stisknute_klavesy[pygame.K_UP]: 
+        y_hrac -= rychlost_hrace
+    if stisknute_klavesy[pygame.K_DOWN]: 
+        y_hrac += rychlost_hrace
         
-    nep_rychlost1 += gravitace_1
-    nep_y1 += nep_rychlost1
-    
-    nep_rychlost2 += gravitace_2
-    nep_y2 += nep_rychlost2
-    
-    nep_rychlost3 += gravitace_3
-    nep_y3 += nep_rychlost3
-    
-    nep_rychlost4 += gravitace_4
-    nep_y4 += nep_rychlost4
-    
-    nep_rychlost5 += gravitace_5
-    nep_y5 += nep_rychlost5
-
     # vykreslovani
     okno.fill((255, 255, 255))
-                   
-    hrac = pygame.draw.rect(okno, (255, 0, 255), (x_hrac, y_hrac, 20, 20))
-   
-    zem = pygame.draw.rect(okno, (0, 255, 0), (x_zem, y_zem, 1500, 50))
     
-    strp = pygame.draw.rect(okno, (0, 0, 0), (0, 0, 1000, 50))
+    hrac = pygame.draw.rect(okno, (0, 0, 0), (x_hrac, y_hrac, 9.8, 9.8))
     
-    nep_1 = pygame.draw.rect(okno, (0, 0, 0), (pozice_nep_x_1, nep_y1, 50, 50))
-    nep_2 = pygame.draw.rect(okno, (0, 0, 0), (pozice_nep_x_2, nep_y2, 50, 50))
-    nep_3 = pygame.draw.rect(okno, (0, 0, 0), (pozice_nep_x_3, nep_y3, 50, 50))
-    nep_4 = pygame.draw.rect(okno, (0, 0, 0), (pozice_nep_x_4, nep_y4, 50, 50))
-    nep_5 = pygame.draw.rect(okno, (0, 0, 0), (pozice_nep_x_5, nep_y5, 50, 50))
+    zed_1 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_1, y_zed_1, 60, 800))
+    zed_2 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_2, y_zed_2, 1000, 140))
+    zed_3 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_3, y_zed_3, 120, 800))
+    zed_4 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_4, y_zed_4, 300, 160))
+    zed_5 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_5, y_zed_5, 592.5, 370))
+    zed_6 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_6, y_zed_6, 200, 700))
+    zed_7 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_7, y_zed_7, 600, 150))
+    zed_8 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_8, y_zed_8, 850, 50))
+    zed_9 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_9, y_zed_9, 500, 550))
+    zed_10 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_10, y_zed_10, 600, 200))
+    zed_11 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_11, y_zed_11, 500, 150))
+    zed_12 = pygame.draw.rect(okno, (255, 0, 0), (x_zed_12, y_zed_12, 500, 10))
+    
+    cil = pygame.draw.rect(okno, (0, 255, 0), (990, 140, 90, 10))
     
     #kolize
-    if nep_1.colliderect(zem):
-        pozice_nep_x_1 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-        nep_y1 = 0
-        nep_rychlost1 = 0
-    
-    if nep_1.colliderect(hrac):
+    if hrac.colliderect(zed_1):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_2):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_3):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_4):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_5):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_6):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_7):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_8):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_9):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_10):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_11):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(zed_12):
+        zivoty -= 1
+        x_hrac = 85
+        y_hrac = 20
+        
+    if hrac.colliderect(cil):
         pygame.quit()
         sys.exit()
-        
-            
-    if nep_2.colliderect(zem):
-        pozice_nep_x_2 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-        nep_y2 = 0
-        nep_rychlost2 = 0
-    
-    if nep_2.colliderect(hrac):
-        pygame.quit()
-        sys.exit()
-        
-        
-    if nep_3.colliderect(zem):
-        pozice_nep_x_3 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-        nep_y3 = 0
-        nep_rychlost3 = 0
-    
-    if nep_3.colliderect(hrac):
-        pygame.quit()
-        sys.exit()
-        
-    if nep_4.colliderect(zem):
-        pozice_nep_x_4 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-        nep_y4 = 0
-        nep_rychlost4 = 0
-    
-    if nep_4.colliderect(hrac):
-        pygame.quit()
-        sys.exit()
-        
-    if nep_5.colliderect(zem):
-        pozice_nep_x_5 = random.choice([50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950])
-        nep_y5 = 0
-        nep_rychlost5 = 0
-    
-    if nep_5.colliderect(hrac):
-        pygame.quit()
-        sys.exit()
-        
         
     pygame.display.update()
-    
