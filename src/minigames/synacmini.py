@@ -112,6 +112,31 @@ questions = [
         "question": "Jaký hráč měl nejvíce bodů na MS v hokeji 2024?",
         "options": ["A. Pierre-Luc Dubois", "B. Matt Boldy", "C. Libor Hudáček", "D. Roman Červenka"],
         "correct_answer": "B"
+    },
+    {
+        "question": "Jaký obránce měl nejvíce bodů na MS v hokeji 2024?",
+        "options": ["A. Victor Hedman", "B. Rasmus Dahlin", "C. Erik Karlsson", "D. Roman Josi"],
+        "correct_answer": "D"
+    },
+    {
+        "question": "Jaký hráč v kategorii U18 měl nejvíce bodů na MS v hokeji 2024?",
+        "options": ["A. Stian Solberg", "B. Konsta Helenius", "C. Michael Brandsegg-Nygård", "D. Felix Unger Sörum"],
+        "correct_answer": "B"
+    },
+    {
+        "question": "Jaký hráč v kategorii U20 měl nejvíce budů na MS v hokeji 2024?", 
+        "options": ["A. Juraj Slafkovský", "B. David Špaček", "C. Connor Bedard", "D. Šimon Nemec"],
+        "correct_answer": "C"
+    },
+    {
+        "question": "Jaký hráč byl vyhlášen nejhodnotnějším hráčem MS v hokeji 2024?",
+        "options": ["A. Roman Červenka", "B. Erik Karlsson", "C. Kevin Fiala", "D. Roman Josi"],
+        "correct_answer": "C"
+    },
+    {
+        "question": "Jaký tým vyhrál stříbrnou medaili na MS v hokeji 2024?",
+        "options": ["A. Česko", "B. Švýcarsko", "C. Švédsko", "D. Kanada"],
+        "correct_answer": "B"
     }
 ]
 
