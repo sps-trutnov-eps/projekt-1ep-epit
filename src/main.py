@@ -192,9 +192,18 @@ def lobby(screen: pg.Surface) -> int:
     light_brown = (205, 133, 63)
     blue = (0, 0, 255)
     dark_gray = (50, 50, 50)
+    green = (0, 255, 0)
 
     center = (400, 300)
     square_size = 550
+    
+    
+    def is_click_on_ui(button_rect, event):
+        return button_rect.collidepoint(event.pos)
+    
+    def start_game():
+            netcode.start_game()
+
     
     def draw_table_and_chairs(surface, table_color, chair_color, table_rect, chair_size, gap):
         pg.draw.rect(surface, table_color, table_rect)
@@ -233,7 +242,7 @@ def lobby(screen: pg.Surface) -> int:
         #if lobby_info == None: # lobby info not yet received
         #    continue
 
-        host_start_button = (150, 600, 200, 50)
+        host_start_button = (10, 300, 100, 40)
 
         colliders = [
             (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, square_size + 100, 50),
@@ -299,6 +308,13 @@ def lobby(screen: pg.Surface) -> int:
             
         draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
         colliders.append(teacher_chair_rect)
+        
+        #host_start_button = (door_x + 25, door_y)
+        pg.draw.rect(screen, green, host_start_button)
+        font = pg.font.Font(None, 36)
+        text = font.render("Start", True, black)
+        text_rect = text.get_rect(center=pg.Rect(host_start_button).center)
+        screen.blit(text, text_rect)
 
         #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
         
