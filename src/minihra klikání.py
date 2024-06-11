@@ -16,7 +16,7 @@ def test_minigame():
 @dataclasses.dataclass()
 class MinigameEndState:
     did_win: bool
-bg_image = pygame.image.load('pozadí.v2.png')
+bg_image = pygame.image.load('Pozadí.v2 klikání.png')
 nahoru = 0
 postup = rozliseni_okna[0]/2
 clicks = 0

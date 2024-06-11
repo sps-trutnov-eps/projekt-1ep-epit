@@ -33,9 +33,11 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     okno.blit(img, (x, y))
 
+bg_image = pg.image.load('Pozadí Aim minigame.png')
+
 pozice = (1,1)
-bod_x = 300
-bod_y = 300
+bod_x = 359
+bod_y = 339
 velikost_kruhu = 50
 stred_x = bod_x + velikost_kruhu/2
 stred_y = bod_y + velikost_kruhu/2
@@ -45,9 +47,9 @@ fake_stred = bod_x + bod_y + velikost_kruhu
 body = 0
 cas = 0
 tutorial = 1
-barva_kruhu1 = random.randrange(0, 255)
+barva_kruhu1 = 0
 barva_kruhu2 = 0
-barva_kruhu3 = random.randrange(0, 255)
+barva_kruhu3 = 0
 barva_kruhu = (barva_kruhu1, barva_kruhu2, barva_kruhu3)
 
 
@@ -87,8 +89,8 @@ while True:
         pozice = pg.mouse.get_pos()
         dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]-stred_y)**(2))
         
-        
-        
+
+
         if dotyk <= 27 and udalost.type == pg.MOUSEBUTTONDOWN :
            body += 1
            bod_x = random.randrange(0, 800 - velikost_kruhu)
@@ -122,9 +124,10 @@ while True:
         
         
         okno.fill((100,200,100))
+        okno.blit(bg_image, (0, 0))
         
-        draw_text(str(body), text_font, (0,0,255), 365, 275)
-        draw_text(str(rncas), text_font, (255,0,0), 350, 325)
+        draw_text(str(body), text_font, (0,0,255), 365, 75)
+        draw_text(str(rncas), text_font, (255,0,0), 350, 125)
         
         
         pg.draw.ellipse(okno, barva_kruhu, (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
