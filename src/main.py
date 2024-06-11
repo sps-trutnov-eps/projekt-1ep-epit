@@ -352,13 +352,20 @@ def set_game_score(score: list):
     global game_score
     game_score = score
 
-def level(screen: pygame.Surface) -> int:
+def level(screen: pygame.Surface, land: str, score: int = 0) -> int:
     """Level function."""
     clock = pygame.time.Clock()
     sprites = pygame.sprite.Group()
+    team = ("ep" if land[0] == "T10" else "it")
 
     while handle_events():
         netcode.client_sync()
+
+        # minigame = {
+        #     "classroom": "minigame"
+        # }
+
+        # minig.switch_to_minigame( minigame[room], team, room, land, score, screen)
 
         sprites.update()
 
