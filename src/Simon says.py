@@ -71,6 +71,8 @@ odpočet = 3
 odpočet_start = False
 čas_startu_odpočtu = 0
 sekvence = []
+pocet_sekvenci = 0
+max_sekvenci = 5
 
 # Funkce pro zobrazení akce
 def zobraz_akci(index):
@@ -79,7 +81,7 @@ def zobraz_akci(index):
     for i, ctverec in enumerate(ctverce):
         pygame.draw.rect(okno, barvy[i], ctverec)
     pygame.display.update()
-    pygame.time.delay(1000)  # Zobraz akci po dobu 1 sekundy
+    pygame.time.delay(500)  # Zobraz akci po dobu 0.5 sekundy
     barvy[index] = GRAY
     pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
     for i, ctverec in enumerate(ctverce):
@@ -93,6 +95,24 @@ def nova_sekvence():
     for i in sekvence:
         zobraz_akci(i)
         pygame.time.delay(500)
+
+# Funkce pro zobrazení chyby
+def zobraz_chybu():
+    for _ in range(3):  # Problikne třikrát
+        for i in range(len(ctverce)):
+            barvy[i] = BLUE
+        pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
+        for i, ctverec in enumerate(ctverce):
+            pygame.draw.rect(okno, barvy[i], ctverec)
+        pygame.display.update()
+        pygame.time.delay(200)
+        for i in range(len(ctverce)):
+            barvy[i] = GRAY
+        pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
+        for i, ctverec in enumerate(ctverce):
+            pygame.draw.rect(okno, barvy[i], ctverec)
+        pygame.display.update()
+        pygame.time.delay(200)
 
 # Hlavní smyčka
 while True:
@@ -136,6 +156,7 @@ while True:
             sekvence = []
             nova_sekvence()
             ctverec_na_kliknuti = 0
+            pocet_sekvenci = 1
 
     # Vykreslení obrazu
     if not hrajeme_hru and not odpočet_start:
@@ -151,21 +172,38 @@ while True:
         for ctverec, barva in zip(ctverce, barvy):
             pygame.draw.rect(okno, barva, ctverec)
         if ctverec_na_kliknuti is not None:
-            for udalost in pygame.event.get():
-                if udalost.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif udalost.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    if ctverce[sekvence[ctverec_na_kliknuti]].collidepoint(mouse_pos):
-                        zobraz_akci(sekvence[ctverec_na_kliknuti])
-                        ctverec_na_kliknuti += 1
-                        if ctverec_na_kliknuti >= len(sekvence):
+            if udalost.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if ctverce[sekvence[ctverec_na_kliknuti]].collidepoint(mouse_pos):
+                    zobraz_akci(sekvence[ctverec_na_kliknuti])
+                    ctverec_na_kliknuti += 1
+                    if ctverec_na_kliknuti >= len(sekvence):
+                        if pocet_sekvenci < max_sekvenci:
                             pygame.time.delay(1000)
                             nova_sekvence()
                             ctverec_na_kliknuti = 0
-                    else:
-                        hrajeme_hru = False
-                        ctverec_na_kliknuti = None
+                            pocet_sekvenci += 1
+                        else:
+                            hrajeme_hru = False
+                            ctverec_na_kliknuti = None
+                            # Zobrazení konce hry
+                            okno.fill(WHITE)
+                            font = pygame.font.Font(None, 74)
+                            text = font.render("Konec hry!", True, BLACK)
+                            okno.blit(text, (rozliseni_okna[0] // 2 - text.get_width() // 2, rozliseni_okna[1] // 2 - text.get_height() // 2))
+                            pygame.display.update()
+                            pygame.time.delay(3000)
+                            hrajeme_hru = False
+                            sekvence = []
+                            nova_sekvence()
+                            ctverec_na_kliknuti = 0
+                            pocet_sekvenci = 1
+                else:
+                    zobraz_chybu()
+                    pygame.time.delay(1000)
+                    ctverec_na_kliknuti = 0  # Znovu začne aktuální sekvence
+                    for i in sekvence:
+                        zobraz_akci(i)
+                        pygame.time.delay(500)
 
     pygame.display.update()
