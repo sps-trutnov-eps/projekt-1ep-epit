@@ -99,10 +99,14 @@ while True:
            stred_y = bod_y + velikost_kruhu/2
            fake_stred = bod_x + bod_y + velikost_kruhu
            barva_kruhu1 = random.randrange(0, 255)
+           if barva_kruhu1 >= 190 and barva_kruhu1 <= 200:
+               barva_kruhu1 += 10
            barva_kruhu2 = random.randrange(0, 255)
-           if barva_kruhu2 == 200:
+           if barva_kruhu2 >= 190 and barva_kruhu2 <= 200:
                barva_kruhu2 += 10
            barva_kruhu3 = random.randrange(0, 255)
+           if barva_kruhu3 >= 190 and barva_kruhu3 <= 200:
+                barva_kruhu3 += 10
            barva_kruhu = (barva_kruhu1, barva_kruhu2, barva_kruhu3)
            
            
@@ -131,5 +135,6 @@ while True:
         
         
         pg.draw.ellipse(okno, barva_kruhu, (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
+        
             
         pg.display.update()
