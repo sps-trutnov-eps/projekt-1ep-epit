@@ -105,7 +105,13 @@ questions = [
     },
     {
         "question": "Jaký hráč měl nejvíc trestných minut na MS v hokeji 2024?",
-        "options": ["A. Oskars Batna", "B. "]
+        "options": ["A. Oskars Batna", "B. Marco Rossi", "C. Hugo Gallet", "D. Miloš Kelemen"],
+        "correct_asnwer": "A"
+    },
+    {
+        "question": "Jaký hráč měl nejvíce bodů na MS v hokeji 2024?",
+        "options": ["A. Pierre-Luc Dubois", "B. Matt Boldy", "C. Libor Hudáček", "D. Roman Červenka"],
+        "correct_answer": "B"
     }
 ]
 
