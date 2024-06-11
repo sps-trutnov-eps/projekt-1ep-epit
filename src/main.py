@@ -1,5 +1,6 @@
 import pygame as pg
 import random as rand
+import os
 from pygame.locals import K_ESCAPE, KEYDOWN, QUIT, K_w, K_s, K_a, K_d
 
 SCREEN_WIDTH = 1920
@@ -16,7 +17,10 @@ player_number = rand.randint(1, 5)
 # player team můžeme také brát z lobby
 player_team = 'it'
 
-obrazek_patra = pg.image.load("1-patro.png")
+file_path = os.path.join(os.path.dirname(__file__), "1-patro")
+file_path2 = os.path.join(os.path.dirname(__file__), "2-patro")
+file_path3 = os.path.join(os.path.dirname(__file__), "prizemi")
+obrazek_patra = 
 
 class Player():
     def __init__(self, player_x, player_y, player_team, player_number):
