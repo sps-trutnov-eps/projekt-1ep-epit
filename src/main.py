@@ -17,10 +17,14 @@ player_number = rand.randint(1, 5)
 # player team můžeme také brát z lobby
 player_team = 'it'
 
-file_path = os.path.join(os.path.dirname(__file__), "1-patro")
-file_path2 = os.path.join(os.path.dirname(__file__), "2-patro")
-file_path3 = os.path.join(os.path.dirname(__file__), "prizemi")
-obrazek_patra = 
+file_path = os.path.join(os.path.dirname(__file__), "1-patro.png")
+file_path2 = os.path.join(os.path.dirname(__file__), "2-patro.png")
+file_path3 = os.path.join(os.path.dirname(__file__), "prizemi.png")
+p1 = pg.image.load(file_path)
+p2 = pg.image.load(file_path2)
+p3 = pg.image.load(file_path3)
+
+obrazek_patra = p1
 
 class Player():
     def __init__(self, player_x, player_y, player_team, player_number):
