@@ -130,8 +130,8 @@ while True:
         okno.fill((100,200,100))
         okno.blit(bg_image, (0, 0))
         
-        draw_text(str(body), text_font, (0,0,255), 365, 75)
-        draw_text(str(rncas), text_font, (255,0,0), 350, 125)
+        draw_text(str(body), text_font, (0,0,255), 355, 75)
+        draw_text(str(rncas), text_font, (255,0,0), 340, 125)
         
         
         pg.draw.ellipse(okno, barva_kruhu, (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
