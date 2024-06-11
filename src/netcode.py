@@ -12,11 +12,13 @@ import os
 
 import time
 from typing import Callable
+import random
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 13
+protocol_version = 14
 packet_len_bytes = 2
+target_ticktime = (1 / 20) # ideal ~20 TPS target
 
 # == client state ==
 
@@ -305,7 +307,7 @@ class ServerState:
 
     remote_locks: dict[str, threading.Lock]
     
-    # lobby data (dict indexed by player_name containing [team_index])
+    # lobby data (dict indexed by player_name containing [team_index, player_num])
     lobby_players: dict[str, list[int]]
     host_players: set[str]
 
@@ -365,7 +367,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         # init client handler
 
         player_name = init_packet[1]
-        server_state.lobby[player_name] = [0]
+        server_state.lobby[player_name] = [0, random.randint(1, 5)]
         
         client_lobby_hash = server_state.hash_lobby()
         client_game_state = server_state.game_state
@@ -376,8 +378,6 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
         send_packet(self.request, ("s_init_success", server_state.lobby, client_game_state, player_name in server_state.host_players))
 
         print(f"server: client {player_name} connected!")
-
-        target_ticktime = (1 / 20) # ideal ~20 TPS target
 
         # client io loop
         while True:
