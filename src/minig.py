@@ -1,4 +1,5 @@
 import pygame
+import netcode
 import minigames.minigame_base as mini
 import minigames.test as mini_test
 import minigames.piano as piano
@@ -10,31 +11,26 @@ minigame_lib = {
     "podvadeni": mini_podvadeni.podvadeni
 }
 
-def switch_to_minigame(name, sur: pygame.Surface):
+def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
     # minigame setup
 
-    mini.mini_surface = sur
+    mini.mini_surface = screen
     mini_loop = minigame_lib[name]
 
     # run minigame
 
-    try:
-        result = mini_loop()
-    except mini.MinigameInterupt as e:
-        # if e.reason == "game_ended":
-        #     return_to_lobby()
-
-        result = None
+    result = mini_loop(screen)
 
     # check result
 
     if result == None:
         raise ValueError(f"minigame {name} nevrátil jestli vyhrál/prohrál (`return False` pokud nejde vyhrát ani prohrát, např. automat)")
     elif result == False:
-        pass # minihra nemá wil/fail state (např. automat)
+        return None
 
     elif result.did_win == False: # win
-        pass # TODO: pro Pavla
-    
+        netcode.send_packet(client_state.server_conn, (str("score_" + team), int(score + (len(land) * 100)), player_name, protocol_version))
+        netcode.send_packet(client_state.server_conn, (str("land_" + team), land.append(room), player_name, protocol_version))
+
     elif result.did_win == True: # fail
-        pass # TODO: pro Pavla
+        return None

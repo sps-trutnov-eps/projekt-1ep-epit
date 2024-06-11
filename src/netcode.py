@@ -70,10 +70,13 @@ client_state: ClientState
 # == client implementation ==
 
 def send_packet(sock: socket.socket, obj):
-    packet_data: bytes = bytes(json.dumps(obj), 'utf-8')
-    packet_len: int = len(packet_data)
+    try:
+        packet_data: bytes = bytes(json.dumps(obj), 'utf-8')
+        packet_len: int = len(packet_data)
 
-    sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+        sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+    except:
+        pass
 
 def read_packet(sock: socket.socket) -> list:
     # read packet size header
@@ -217,7 +220,7 @@ def update_player_info(pos: list[float], vel: list[float]):
 # note: called only by the server!!!
 def game_end():
     server_state.game_state = 0
-    
+
     print("server: ending game...")
 
 def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks: tuple) -> tuple[bool, str | None]:
@@ -276,7 +279,7 @@ def disconnect_as_client():
 # == server state ==
 
 class ServerState:
-    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players"]
+    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players", "score_ep", "score_it", "land_ep", "land_it"]
 
     def __init__(self) -> None:
         # init the server infrastructure
@@ -298,6 +301,10 @@ class ServerState:
 
         self.player_info = {}
         self.game_state = 0
+        self.score_ep = 0
+        self.score_it = 0
+        self.land_ep = ["T10"]
+        self.land_it = ["T7"]
 
     # used to detect lobby changes between clients
     def hash_lobby(self) -> bytes:
@@ -314,6 +321,10 @@ class ServerState:
     # in-game data (dict indexed by player_name containing [position, velocity]
     player_info: dict[str, list]
     game_state: int
+    score_ep: int
+    score_it: int
+    land_ep: list
+    land_it: list
 
 server_state: ServerState
 server_process: subprocess.Popen # only used when running internal server
@@ -471,6 +482,22 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                     else:
                         send_packet(self.request, ("s_unexpected_packet",))
 
+                    # score packets
+                    
+                    if packet[0] == "score_ep":
+                        server_state.score_ep = packet[1]
+
+                    elif packet[0] == "score_it":
+                        server_state.score_it = packet[1]
+
+                    # land packets
+                    
+                    elif packet[0] == "land_ep":
+                        server_state.land_ep = packet[1]
+
+                    elif packet[0] == "land_it":
+                        server_state.land_it = packet[1]
+
             except ConnectionError:
                 server_handle_disconnect(player_name)
                 return
@@ -486,8 +513,8 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 
             if server_state.game_state == 1:
                 # game score
-
-                game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+                game_tick[2]["game_score_ep"] = (server_state.score_ep + len(server_state.land_ep))
+                game_tick[2]["game_score_it"] = (server_state.score_it + len(server_state.land_it))
             else:
                 game_tick[2]["game_score"] = None # no score updates when in lobby
 
