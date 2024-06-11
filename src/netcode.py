@@ -481,7 +481,7 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
 
                     # score packets
                     
-                    elif packet[0] == "score_ep":
+                    if packet[0] == "score_ep":
                         server_state.score_ep = packet[1]
 
                     elif packet[0] == "score_it":
@@ -510,10 +510,8 @@ class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
                 
             if server_state.game_state == 1:
                 # game score
-
-            game_tick[2]["game_score_ep"] = (server_state.score_ep + len(server_state.land_ep))
-            game_tick[2]["game_score_it"] = (server_state.score_it + len(server_state.land_it))
-                game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
+                game_tick[2]["game_score_ep"] = (server_state.score_ep + len(server_state.land_ep))
+                game_tick[2]["game_score_it"] = (server_state.score_it + len(server_state.land_it))
             else:
                 game_tick[2]["game_score"] = None # no score updates when in lobby
 
