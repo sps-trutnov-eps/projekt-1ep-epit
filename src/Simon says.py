@@ -4,11 +4,11 @@ import random
 
 pygame.init()
 
-# Nastavení rozlišení okna
+
 rozliseni_okna = (800, 600)
 okno = pygame.display.set_mode(rozliseni_okna)
 
-# Definice pozic čtverců
+
 pozice_hlavni_x = 175
 pozice_hlavni_y = 75
 
@@ -31,13 +31,13 @@ pozice_osmy_y = 400
 pozice_devaty_x = 500
 pozice_devaty_y = 400
 
-# Barvy
+
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 
-# Vytvoření seznamu čtverců
+
 ctverce = [
     pygame.Rect(pozice_prvni_x, pozice_prvni_y, 100, 100),
     pygame.Rect(pozice_druhy_x, pozice_druhy_y, 100, 100),
@@ -50,21 +50,21 @@ ctverce = [
     pygame.Rect(pozice_devaty_x, pozice_devaty_y, 100, 100)
 ]
 
-# Barvy čtverců
+
 barvy = [GRAY] * len(ctverce)
 
-# Fonty pro menu
+
 fonty_menu = [
     pygame.font.Font(None, 36),
     pygame.font.Font(None, 36),
     pygame.font.Font(None, 26)
 ]
 
-# Texty možností menu
+
 texty_menu = ["Pro začátek hry stisni klávesu enter", "Vítej v minihře Simon says", "Budou blikat čtverečky, ty si musíš zapamatovat jejich pořadí a potom ho zkopírovat"]
 pozice_textu_y = [220, 100, 120]
 
-# Stav hry
+
 hrajeme_hru = False
 ctverec_na_kliknuti = None
 odpočet = 3
@@ -74,21 +74,21 @@ sekvence = []
 pocet_sekvenci = 0
 max_sekvenci = 5
 
-# Funkce pro zobrazení akce
+
 def zobraz_akci(index):
     barvy[index] = BLUE
     pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
     for i, ctverec in enumerate(ctverce):
         pygame.draw.rect(okno, barvy[i], ctverec)
     pygame.display.update()
-    pygame.time.delay(500)  # Zobraz akci po dobu 0.5 sekundy
+    pygame.time.delay(500)  
     barvy[index] = GRAY
     pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
     for i, ctverec in enumerate(ctverce):
         pygame.draw.rect(okno, barvy[i], ctverec)
     pygame.display.update()
 
-# Funkce pro generování nové sekvence
+
 def nova_sekvence():
     index = random.randint(0, 8)
     sekvence.append(index)
@@ -96,9 +96,9 @@ def nova_sekvence():
         zobraz_akci(i)
         pygame.time.delay(500)
 
-# Funkce pro zobrazení chyby
+
 def zobraz_chybu():
-    for _ in range(3):  # Problikne třikrát
+    for _ in range(3):  
         for i in range(len(ctverce)):
             barvy[i] = BLUE
         pygame.draw.rect(okno, (200, 200, 200), (pozice_hlavni_x, pozice_hlavni_y, 450, 450))
@@ -114,7 +114,7 @@ def zobraz_chybu():
         pygame.display.update()
         pygame.time.delay(200)
 
-# Hlavní smyčka
+
 while True:
     for udalost in pygame.event.get():
         if udalost.type == pygame.QUIT:
@@ -122,12 +122,12 @@ while True:
             sys.exit()
         elif not hrajeme_hru and udalost.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            # Kontrola, jestli bylo kliknuto na tlačítka v hlavním menu
+            
             for i, text in enumerate(texty_menu):
                 text_rect = fonty_menu[i].render(text, True, BLACK).get_rect(center=(rozliseni_okna[0] // 2, pozice_textu_y[i]))
                 if text_rect.collidepoint(mouse_pos):
                     if text == "Pro začátek hry stisni klávesu enter":
-                        # Spustit hru
+                        
                         hrajeme_hru = True
         elif not hrajeme_hru and udalost.type == pygame.KEYDOWN:
             if udalost.key == pygame.K_RETURN:
@@ -158,7 +158,7 @@ while True:
             ctverec_na_kliknuti = 0
             pocet_sekvenci = 1
 
-    # Vykreslení obrazu
+    
     if not hrajeme_hru and not odpočet_start:
         okno.fill(WHITE)
         pygame.draw.rect(okno, WHITE, (0, 0, rozliseni_okna[0], 600))
@@ -186,10 +186,10 @@ while True:
                         else:
                             hrajeme_hru = False
                             ctverec_na_kliknuti = None
-                            # Zobrazení konce hry
+                            
                             okno.fill(WHITE)
                             font = pygame.font.Font(None, 74)
-                            text = font.render("Konec hry!", True, BLACK)
+                            text = font.render("Vyhrál jsi!", True, BLACK)
                             okno.blit(text, (rozliseni_okna[0] // 2 - text.get_width() // 2, rozliseni_okna[1] // 2 - text.get_height() // 2))
                             pygame.display.update()
                             pygame.time.delay(3000)
@@ -201,7 +201,7 @@ while True:
                 else:
                     zobraz_chybu()
                     pygame.time.delay(1000)
-                    ctverec_na_kliknuti = 0  # Znovu začne aktuální sekvence
+                    ctverec_na_kliknuti = 0  
                     for i in sekvence:
                         zobraz_akci(i)
                         pygame.time.delay(500)
