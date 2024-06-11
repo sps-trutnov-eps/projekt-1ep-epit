@@ -10,20 +10,6 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 
-class ClassButton(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.font = pygame.font.Font(None, 64)
-        self.text = self.font.render("1.EP", True, WHITE, None)
-        self.rect = self.text.get_rect(topleft=(x, y))
-        self.image = pygame.Surface((self.text.get_width(), self.text.get_height()))
-        self.image.fill(BLUE)
-
-    def update(self, team):
-        self.image.fill(BLUE if team == 0 else RED)
-        self.text = (self.font.render("1.EP", True, WHITE, None) if team == 0 else self.font.render("1.IT", True, WHITE, None))
-        self.image.blit(self.text, (0, 0))
-
 # lobby data (dict indexed by player_name containing [team_index])
 lobby_info: dict[str, list[int]] = None
 
@@ -40,35 +26,6 @@ def set_result_info(result: list):
     global result_info
     result_info = result
 
-class PlayButton(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.font = pygame.font.Font(None, 64)
-        self.text = self.font.render("Play", True, WHITE, None)
-        self.rect = self.text.get_rect(center=(x, y))
-        self.image = pygame.Surface((self.text.get_width(), self.text.get_height()))
-        self.image.fill(RED)
-        self.image.blit(self.text, (0, 0))
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.image.load("player0.png")
-        self.rect = self.image.get_rect(center=(x, y))
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-
-def update_sprites(sprites: pygame.sprite.Group, screen: pygame.Surface, team: int) -> None:
-    """Sprite update function."""
-    sprites.update(team)
-    screen.fill(BLACK)
-    sprites.draw(screen)
-    pygame.display.update()
-
 # == level ==
 
 def level(screen: pygame.Surface, team: int, score: int = 0) -> None:
@@ -83,6 +40,10 @@ def level(screen: pygame.Surface, team: int, score: int = 0) -> None:
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 return None
         update_sprites(sprites, screen, team)
+        sprites.update(team)
+        screen.fill(BLACK)
+        sprites.draw(screen)
+        pygame.display.update()
         clock.tick(60)
     
     return 0 # return to lobby
