@@ -1,4 +1,4 @@
-import pygame
+import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
 import netcode
@@ -221,8 +221,8 @@ def lobby(screen: pg.Surface) -> int:
 
 def level(screen: pg.Surface) -> int:
     """Level function."""
-    clock = pygame.time.Clock()
-    sprites = pygame.sprite.Group()
+    clock = pg.time.Clock()
+    sprites = pg.sprite.Group()
 
     while handle_events():
         netcode.client_sync()
@@ -236,11 +236,11 @@ def level(screen: pg.Surface) -> int:
     
     return 1 # return to lobby
 
-def init_game() -> pygame.Surface:
+def init_game() -> pg.Surface:
     """Pygame init function."""
-    pygame.init()
-    screen = pygame.display.set_mode(SCREEN_RESOLUTION)
-    pygame.display.set_caption('EPIT')
+    pg.init()
+    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pg.display.set_caption('EPIT')
     return screen
 
 def p_test(screen: pg.Surface) -> int:
@@ -276,11 +276,7 @@ def p_test(screen: pg.Surface) -> int:
 def main(scene_id: int = 0) -> None:
     """Main function."""
     screen = init_game()
-    import minig
-    minig.switch_to_minigame("podvadeni",screen)
-    pygame.time.set_timer(pygame.USEREVENT, 1000)
-    map_level(screen)
-
+    
     # p_test(screen)
 
     try:
