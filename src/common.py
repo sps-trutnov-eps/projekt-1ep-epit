@@ -30,15 +30,18 @@ pm_accel = 35
 pm_friction = .985
 pm_max_speed = 600
 
-pm_player_size = 15
+pm_player_size = 10
 
 # player movement update, can be reused between levels, returns new vel which should be passed as an argument vel on the next update
-# keys = pygame.keys.pressed()
+# keys = pygame.key.get_pressed()
 # delta_time = time (in seconds) since last update
 # state = tuple of two lists, state[0] = current position of player, state[1] = current velocity of player (returns new state)
 # coll_rects = list of Rects to serve as walls
+#
+# note: if your player is getting stuck on some colliders, it might be possible that there are multiple rects overlayed over each other which can cause the "bug"
+#       just remove the duplicates, if you can't find duplicates, uncomment the line `print(colls)` to get the indexes (into the coll_rects argument) of the duplicate colliders
 
-def player_move_update(keys: dict, delta_time: float, state: tuple[list[float, float], list[float, float]], coll_rects: list[pygame.Rect]) -> tuple[list[float, float], list[float, float]]:
+def player_move_update(keys: dict, delta_time: float, state: tuple[list[float], list[float]], coll_rects: list[pygame.Rect]) -> tuple[list[float], list[float]]:
     # update vel
 
     pos = state[0]
@@ -64,6 +67,9 @@ def player_move_update(keys: dict, delta_time: float, state: tuple[list[float, f
 
     # correct collisions
     
+    # uncomment to show all touching colliders in this update
+    # print(colls)
+
     for coll in colls:
         # test for x
 

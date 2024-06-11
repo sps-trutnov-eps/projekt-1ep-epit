@@ -1,11 +1,12 @@
 import pygame as pg
 from pygame import K_ESCAPE, KEYDOWN, QUIT
+import time
 
 import netcode
 import common
 
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -148,7 +149,7 @@ def main_menu(screen: pg.Surface) -> int:
 
     # connect to server
 
-    netcode.setup_netcode((session_info[0], 15533), session_info[1], True if session_info[2] == 2 else False, (set_lobby_info, set_result_info))
+    netcode.setup_netcode((session_info[0], 15533), session_info[1], True if session_info[2] == 2 else False, (set_lobby_info, set_result_info, set_player_info, set_game_score))
 
     return 1 # switch scene to lobby
 
@@ -174,7 +175,7 @@ lobby_info: dict[str, list[int]] = None
 # game result data (TODO)
 result_info = None
 
-def set_lobby_info(lobby: list):
+def set_lobby_info(lobby: dict):
     global lobby_info
     lobby_info = lobby
 
@@ -183,7 +184,47 @@ def set_result_info(result: list):
     result_info = result
 
 def lobby(screen: pg.Surface) -> int:
-    while True:
+    pg.display.set_caption('lobby')
+
+    black = (0, 0, 0)
+    brown = (139, 69, 19)
+    gray = (169, 169, 169)
+    light_brown = (205, 133, 63)
+    blue = (0, 0, 255)
+    dark_gray = (50, 50, 50)
+
+    center = (400, 300)
+    square_size = 550
+    
+    def draw_table_and_chairs(surface, table_color, chair_color, table_rect, chair_size, gap):
+        pg.draw.rect(surface, table_color, table_rect)
+    
+        table_x, table_y, table_width, table_height = table_rect
+        chair_width, chair_height = chair_size
+    
+        pg.draw.rect(surface, chair_color, (table_x + (table_width - chair_width * 2 - gap) / 2, table_y - chair_height - 5, chair_width, chair_height))
+        pg.draw.rect(surface, chair_color, (table_x + (table_width + gap) / 2, table_y - chair_height - 5, chair_width, chair_height))
+    
+    def draw_square(surface, color, center, size):
+        top_left = (center[0] - size // 2, center[1] - size // 2)
+        pg.draw.rect(surface, color, (*top_left, size, size))
+        
+    def draw_teacher_table_and_chair(surface, table_color, chair_color, table_rect, chair_rect):
+        pg.draw.rect(surface, table_color, table_rect)
+        pg.draw.rect(surface, chair_color, chair_rect)
+    
+    def draw_door(surface, color, position, size, knob_color, knob_radius):
+        pg.draw.rect(surface, color, pg.Rect(position, size))
+        knob_position = (position[0] + size[0] - knob_radius, position[1] + knob_radius)
+        pg.draw.circle(surface, knob_color, knob_position, 3)
+        
+    running = True
+
+    player_state = ([400, 300], [0, 0])
+
+    t = time.time()
+    
+    while running:
         netcode.client_sync()
         
         if netcode.client_state.game_state == 1: # did the game start?
@@ -194,6 +235,13 @@ def lobby(screen: pg.Surface) -> int:
 
         host_start_button = (150, 600, 200, 50)
 
+        colliders = [
+            (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, square_size + 100, 50),
+            (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, 50, square_size + 100),
+            (center[0] - square_size // 2 - 50, center[1] + square_size // 2, square_size + 100, 50),
+            (center[0] + square_size // 2, center[1] - square_size // 2 - 50, 50, square_size + 100),
+        ]
+
         for event in pg.event.get():
             if (event.type == QUIT or
                 (event.type == KEYDOWN and event.key == K_ESCAPE)):
@@ -203,21 +251,102 @@ def lobby(screen: pg.Surface) -> int:
                 if common.is_click_on_ui(host_start_button, event):
                     netcode.start_game()
 
-        screen.fill(BLACK)
+        screen.fill(black)
+        
+        draw_square(screen, dark_gray, center, square_size + 20)
+        draw_square(screen, brown, center, square_size)
+        
+        table_width, table_height = 60, 30
+        chair_width, chair_height = 25, 25
+        rows = 4
+        cols = 4
+        spacing = 40
+        gap = 5
+        vertical_offset = -40
+        horizontal_offset = -40 
+        
+        start_x = center[0] - (cols * (table_width + spacing) / 2) + (table_width / 2) + horizontal_offset
+        start_y = center[1] - (cols * (table_height + chair_height + spacing) / 2) + chair_height + (table_height / 2) + vertical_offset
+        
+        for row in range(rows):
+            for col in range(cols):
+                table_x = start_x + col * (table_width + spacing)
+                table_y = start_y + row * (table_height + chair_height + spacing)
+                chair_x = start_x + col * (table_width + spacing)
+                chair_y = start_y + row * (table_height + chair_height + spacing)
+                table_rect = (table_x, table_y, table_width, table_height)
+                chair_rect = (chair_x, chair_y, chair_width, chair_height)
+                draw_table_and_chairs(screen, light_brown, light_brown, table_rect, (chair_width, chair_height), gap)
+                
+                colliders.append(table_rect)
 
-        if not result_info == None:
-            # TODO: show game results
+        teacher_table_width, teacher_table_height = 35, 25 #je to naopak, table width, height zaznamenává velikost židle a chair width, height zaznamenává velikost stolu
+        teacher_chair_width, teacher_chair_height = 100, 40
+                
+        teacher_table_x = center[0] - square_size // 2 + 10
+        teacher_table_y = center[1] + square_size // 2 - teacher_table_height - 10
+            
+        teacher_chair_x = teacher_table_x + (teacher_table_width - teacher_table_width) // 2
+        teacher_chair_y = teacher_table_y - teacher_chair_height - 5
+            
+        teacher_table_rect = (teacher_table_x, teacher_table_y, teacher_table_width, teacher_table_height)
+        teacher_chair_rect = (teacher_chair_x, teacher_chair_y, teacher_chair_width, teacher_chair_height)
+            
+        door_width, door_height = 10, 70
+        door_x = center[0] + square_size // 2 - door_width
+        door_y = center[1] + square_size // 2 - door_height - 10
+        draw_door(screen, gray, (door_x, door_y), (door_width, door_height), black, 10)
+            
+        draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
+        colliders.append(teacher_chair_rect)
 
-            continue
+        #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
+        
+        # updates the delta (frame) time and player movement
 
-        # TODO: draw lobby info
+        delta_time = time.time() - t
+        t = time.time()
 
-        pg.draw.rect(screen, (127, 127, 127), host_start_button)
-        common.game_font.render_to(screen, common.center_in_rect(host_start_button, common.game_font.get_rect("Start game")), "Start game", (255, 255, 255))
+        # temp color squares, would be replaced with skins if implemented
+
+        player_state = common.player_move_update(pg.key.get_pressed(), delta_time, player_state, colliders)
+        draw_square(screen, (255, 0, 0), player_state[0], common.pm_player_size * 2)
+
+        netcode.update_player_info(player_state[0], player_state[1])
+
+        pred_time = (time.time() - player_info_age) * .9
+
+        if not player_info == None:
+            for name, p in player_info.items():
+                if name == session_info[1]: # do not render the local player
+                    continue
+                
+                # TODO: prediction can be improved
+
+                # pred_p = common.player_move_update({}, pred_time, (p[0], p[1]), colliders)
+                pred_p = (p[0][0] + p[1][0] * pred_time, p[0][1] + p[1][1] * pred_time) # simple velocity add
+
+                draw_square(screen, (0, 255, 0), pred_p, common.pm_player_size * 2)
 
         pg.display.update()
 
 # == level ==
+
+player_info: dict[str, list] | None = None
+player_info_age: float = 0
+
+game_score: None = None # TODO: set type
+
+def set_player_info(players: dict):
+    global player_info
+    global player_info_age
+
+    player_info = players
+    player_info_age = time.time()
+
+def set_game_score(score: list):
+    global game_score
+    game_score = score
 
 def level(screen: pg.Surface) -> int:
     """Level function."""
@@ -249,8 +378,8 @@ def p_test(screen: pg.Surface) -> int:
     wall_rects = [
         (100, 100, 50, 50),
         (100, 200, 20, 50),
-        (300, 100, 20, 20),
-        (100, 100, 50, 50),
+        (300, 200, 20, 20),
+        (200, 200, 50, 50),
         (100, 510, 51, 50),
         (300, 100, 51, 20),
     ]
