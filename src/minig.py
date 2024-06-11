@@ -3,10 +3,12 @@ import netcode
 import minigames.minigame_base as mini
 import minigames.test as mini_test
 import minigames.piano as piano
+import minigames.podvadeni as mini_podvadeni
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
     "piano": piano.piano,
+    "podvadeni": mini_podvadeni.podvadeni
 }
 
 def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
