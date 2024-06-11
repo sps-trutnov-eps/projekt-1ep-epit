@@ -52,93 +52,30 @@ print("Images loaded successfully.")
 
 def handle_events() -> bool:
     """Events handling function."""
-    global x, y, walls
-
-    keys = pg.key.get_pressed()
-
-    if keys[pg.K_w]:
-        for wall in walls:
-            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
-                y -= 20
-                wall[1] -= 20
-        y += 20
-        for wall in walls:
-            wall[1] += 20
-    if keys[pg.K_s]:
-        for wall in walls:
-            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
-                y += 20
-                wall[1] += 20
-        y -= 20
-        for wall in walls:
-            wall[1] -= 20
-    if keys[pg.K_a]:
-        for wall in walls:
-            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
-                x -= 20
-                wall[0] -= 20
-        x += 20
-        for wall in walls:
-            wall[0] += 20
-
-    if keys[pg.K_d]:
-        for wall in walls:
-            if check_collision((x, y, obrazek.get_width(), obrazek.get_height()), wall):
-                x += 20
-                wall[0] += 20
-        x -= 20
-        for wall in walls:
-            wall[0] -= 20
-
-    for event in pg.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            return False
-
-    return True
-
-def handle_events() -> bool:
-    """Events handling function."""
     global walls, y, x
 
     keys = pg.key.get_pressed()
-    move_allowed = True
 
     if keys[pg.K_w]:
-        for wall in walls:
-            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
-                move_allowed = False
-                break
-        if move_allowed:
+        if can_move(0, 20):
             y += 20
             for wall in walls:
-             wall[1] += 20
+                wall[1] += 20
 
     if keys[pg.K_s]:
-        for wall in walls:
-            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
-                move_allowed = False
-                break
-        if move_allowed:
+        if can_move(0, -20):
             y -= 20
             for wall in walls:
-             wall[1] -= 20
+                wall[1] -= 20
 
     if keys[pg.K_a]:
-        for wall in walls:
-            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
-                move_allowed = False
-                break
-        if move_allowed:
+        if can_move(20, 0):
             x += 20
             for wall in walls:
                 wall[0] += 20
 
     if keys[pg.K_d]:
-        for wall in walls:
-            if check_collision((xp, yp, obrazekP.get_width(), obrazekP.get_height()), wall):
-                move_allowed = False
-                break
-        if move_allowed:
+        if can_move(-20, 0):
             x -= 20
             for wall in walls:
                 wall[0] -= 20
@@ -146,6 +83,15 @@ def handle_events() -> bool:
     for event in pg.event.get():
         if (event.type == QUIT or
             (event.type == KEYDOWN and event.key == K_ESCAPE)):
+            return False
+    return True
+
+def can_move(dx, dy):
+    """Check if moving the map by (dx, dy) will keep it within screen bounds."""
+    for wall in walls:
+        new_x = wall[0] + dx
+        new_y = wall[1] + dy
+        if new_x < 0 or new_x + wall[2] > SCREEN_WIDTH or new_y < 0 or new_y + wall[3] > SCREEN_HEIGHT:
             return False
     return True
 
@@ -159,7 +105,6 @@ def level(screen: pg.Surface) -> None:
 
     while handle_events():
         sprites.update()
-        move_allowed = True
         screen.fill(BLACK)
         sprites.draw(screen)
         screen.blit(obrazek, (x, y))
@@ -171,7 +116,7 @@ def level(screen: pg.Surface) -> None:
 def draw_walls(screen):
     """Draw walls on the screen."""
     for wall in walls:
-        pg.draw.rect(screen, (255, 255, 255), wall)
+        pg.draw.rect(screen, WHITE, wall)
 
 def init_game() -> pg.Surface:
     global screen
