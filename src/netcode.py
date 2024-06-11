@@ -68,10 +68,13 @@ client_state: ClientState
 # == client implementation ==
 
 def send_packet(sock: socket.socket, obj):
-    packet_data: bytes = bytes(json.dumps(obj), 'utf-8')
-    packet_len: int = len(packet_data)
+    try:
+        packet_data: bytes = bytes(json.dumps(obj), 'utf-8')
+        packet_len: int = len(packet_data)
 
-    sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+        sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+    except:
+        pass
 
 def read_packet(sock: socket.socket) -> list:
     # read packet size header

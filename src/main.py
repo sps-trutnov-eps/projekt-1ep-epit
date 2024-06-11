@@ -183,8 +183,8 @@ def set_result_info(result: list):
     global result_info
     result_info = result
 
-def lobby(screen: pg.Surface) -> int:
-    pg.display.set_caption('lobby')
+def lobby(screen: pygame.Surface) -> int:
+    pygame.display.set_caption('lobby')
 
     black = (0, 0, 0)
     brown = (139, 69, 19)
@@ -197,26 +197,26 @@ def lobby(screen: pg.Surface) -> int:
     square_size = 550
     
     def draw_table_and_chairs(surface, table_color, chair_color, table_rect, chair_size, gap):
-        pg.draw.rect(surface, table_color, table_rect)
+        pygame.draw.rect(surface, table_color, table_rect)
     
         table_x, table_y, table_width, table_height = table_rect
         chair_width, chair_height = chair_size
     
-        pg.draw.rect(surface, chair_color, (table_x + (table_width - chair_width * 2 - gap) / 2, table_y - chair_height - 5, chair_width, chair_height))
-        pg.draw.rect(surface, chair_color, (table_x + (table_width + gap) / 2, table_y - chair_height - 5, chair_width, chair_height))
+        pygame.draw.rect(surface, chair_color, (table_x + (table_width - chair_width * 2 - gap) / 2, table_y - chair_height - 5, chair_width, chair_height))
+        pygame.draw.rect(surface, chair_color, (table_x + (table_width + gap) / 2, table_y - chair_height - 5, chair_width, chair_height))
     
     def draw_square(surface, color, center, size):
         top_left = (center[0] - size // 2, center[1] - size // 2)
-        pg.draw.rect(surface, color, (*top_left, size, size))
+        pygame.draw.rect(surface, color, (*top_left, size, size))
         
     def draw_teacher_table_and_chair(surface, table_color, chair_color, table_rect, chair_rect):
-        pg.draw.rect(surface, table_color, table_rect)
-        pg.draw.rect(surface, chair_color, chair_rect)
+        pygame.draw.rect(surface, table_color, table_rect)
+        pygame.draw.rect(surface, chair_color, chair_rect)
     
     def draw_door(surface, color, position, size, knob_color, knob_radius):
-        pg.draw.rect(surface, color, pg.Rect(position, size))
+        pygame.draw.rect(surface, color, pygame.Rect(position, size))
         knob_position = (position[0] + size[0] - knob_radius, position[1] + knob_radius)
-        pg.draw.circle(surface, knob_color, knob_position, 3)
+        pygame.draw.circle(surface, knob_color, knob_position, 3)
         
     running = True
 
@@ -243,7 +243,7 @@ def lobby(screen: pg.Surface) -> int:
             (center[0] + square_size // 2, center[1] - square_size // 2 - 50, 50, square_size + 100),
         ]
 
-        for event in pg.event.get():
+        for event in pygame.event.get():
             if (event.type == QUIT or
                 (event.type == KEYDOWN and event.key == K_ESCAPE)):
                 exit(0)
@@ -313,7 +313,7 @@ def lobby(screen: pg.Surface) -> int:
 
         # temp color squares, would be replaced with skins if implemented
 
-        player_state = common.player_move_update(pg.key.get_pressed(), delta_time, player_state, colliders)
+        player_state = common.player_move_update(pygame.key.get_pressed(), delta_time, player_state, colliders)
         draw_square(screen, (255, 0, 0), player_state[0], common.pm_player_size * 2)
 
         netcode.update_player_info(player_state[0], player_state[1])
@@ -332,7 +332,7 @@ def lobby(screen: pg.Surface) -> int:
 
                 draw_square(screen, (0, 255, 0), pred_p, common.pm_player_size * 2)
 
-        pg.display.update()
+        pygame.display.update()
 
 # == level ==
 
@@ -371,12 +371,12 @@ def level(screen: pygame.Surface) -> int:
 
 def init_game() -> pygame.Surface:
     """Pygame init function."""
-    pg.init()
-    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pg.display.set_caption('Game')
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_RESOLUTION[0], SCREEN_RESOLUTION[1]))
+    pygame.display.set_caption('Game')
     return screen
 
-def p_test(screen: pg.Surface) -> int:
+def p_test(screen: pygame.Surface) -> int:
     p_state = ([0, 0], [0, 0])
 
     wall_rects = [
@@ -398,13 +398,13 @@ def p_test(screen: pg.Surface) -> int:
         delta_time = time.time() - t1
         t1 = time.time()
 
-        p_state = common.player_move_update(pg.key.get_pressed(), delta_time, p_state, wall_rects)
-        pg.draw.rect(screen, (255, 0, 0), (p_state[0][0] - common.pm_player_size, p_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2))
+        p_state = common.player_move_update(pygame.key.get_pressed(), delta_time, p_state, wall_rects)
+        pygame.draw.rect(screen, (255, 0, 0), (p_state[0][0] - common.pm_player_size, p_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2))
         
         for w in wall_rects:
-            pg.draw.rect(screen, (0, 255, 0), w)
+            pygame.draw.rect(screen, (0, 255, 0), w)
 
-        pg.display.update()
+        pygame.display.update()
 
 def main(scene_id: int = 0) -> None:
     """Main function."""
