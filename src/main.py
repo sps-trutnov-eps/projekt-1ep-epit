@@ -1,4 +1,5 @@
 import pygame as pg
+import random as rand
 from pygame.locals import K_ESCAPE, KEYDOWN, QUIT, K_w, K_s, K_a, K_d
 
 SCREEN_WIDTH = 1920
@@ -7,7 +8,13 @@ SCREEN_HEIGHT = 1080
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-player_number = 4
+# player_number = 4
+# sem bychom jsme si mohli brat cislo hrace podle toho kolikaty se napoji do lobby
+# prozatim :
+player_number = rand.randint(1, 5)
+ 
+# player team můžeme také brát z lobby
+player_team = 'it'
 
 obrazek_patra = pg.image.load("1-patro.png")
 
@@ -79,7 +86,7 @@ def is_collision(x, y, width, height, background):
 
 def druhy_patro(screen: pg.Surface) -> None:
     clock = pg.time.Clock()
-    player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 'ep', player_number)
+    player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, player_team, player_number)
 
     while handle_events(player, obrazek_patra):
         bg_offset_x = SCREEN_WIDTH // 2 - player.x
