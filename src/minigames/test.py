@@ -8,13 +8,13 @@ def test_minigame():
         for event in pygame.event.get():
             if (event.type == pygame.QUIT or
                 (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
-                quit()
+                exit()
 
-        # stiskni e abys vyhrál
+        # stiskni e abys prohrál
         if pygame.key.get_pressed()[pygame.K_e]:
             return mini.fail_minigame()
         
-        # stiskni q abys prohrál
+        # stiskni q abys vyhrál
         elif pygame.key.get_pressed()[pygame.K_q]:
             return mini.win_minigame()
 
