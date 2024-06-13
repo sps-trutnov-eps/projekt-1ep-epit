@@ -3,7 +3,7 @@ from minig import switch_to_minigame
 import netcode
 import common
 import pygame
-from pygame import K_ESCAPE, KEYDOWN, QUIT, MOUSEBUTTONDOWN
+from pygame import K_ESCAPE, KEYDOWN, QUIT
 
 SCREEN_RESOLUTION = (1280, 960)
 WHITE = (255, 255, 255)
@@ -117,6 +117,9 @@ def main_menu(screen: pygame.Surface) -> int:
                 elif common.is_click_on_ui(host_render_area, event):
                     game_mode = 2
                     break
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                editor(screen)
 
         screen.fill(BLACK)
 
@@ -376,6 +379,395 @@ def level(screen: pygame.Surface, land: str, score: int = 0) -> int:
     
     return 1 # return to lobby
 
+# == edit mode ==
+
+class Camera2D:
+    __slots__ = ["x", "y"]
+
+    x: int
+    y: int
+
+    def __init__(self) -> None:
+        self.set_pos(0, 0)
+
+    def set_pos(self, x, y) -> None:
+        self.x = x
+        self.y = y
+
+    def get_pos(self) -> tuple[int, int]:
+        return (self.x, self.y)
+
+    def offset(self, x, y) -> None:
+        self.x += x
+        self.y += y
+    
+    def translate(self, rect: pygame.Rect) -> pygame.Rect:
+        return pygame.Rect((rect[0] - self.x + (SCREEN_RESOLUTION[0] // 2), rect[1] - self.y + (SCREEN_RESOLUTION[1] // 2), rect[2], rect[3]))
+    
+    def translate_inverse(self, pos) -> tuple[int, int]:
+        return (pos[0] + self.x - (SCREEN_RESOLUTION[0] // 2), pos[1] + self.y - (SCREEN_RESOLUTION[1] // 2))
+
+def reload_prop(p) -> pygame.Surface:
+    return pygame.transform.scale_by(pygame.image.load(p[0]), p[1])
+
+# dev-only in editor playtest with a simple player
+def playtest(screen: pygame.Surface, bg: pygame.Surface, colls: list, props: list):
+    cam = Camera2D()
+    player_state = ([0, 0], [0, 0])
+
+    prop_surfs = []
+    for prop in props:
+        prop_surfs.append(reload_prop(prop))
+
+    t = time.time()
+
+    while True:
+        for event in pygame.event.get():
+            if (event.type == QUIT or
+                (event.type == KEYDOWN and event.key == K_ESCAPE)):
+                return
+        
+        delta_time = time.time() - t
+        t = time.time()
+
+        player_state = common.player_move_update(pygame.key.get_pressed(), delta_time, player_state, colls)
+        cam.set_pos(*player_state[0])
+
+        screen.fill(BLACK)
+
+        bg_rect = bg.get_rect()
+        bg_rect = (bg_rect[0] - bg_rect.centerx, bg_rect[1] - bg_rect.centery, bg_rect[2], bg_rect[3])
+
+        screen.blit(bg, cam.translate(bg_rect))
+
+        for i, prop in enumerate(props):
+            prop_rect = cam.translate((*prop[2], *prop_surfs[i].get_size()))
+            screen.blit(prop_surfs[i], prop_rect)
+
+        pygame.draw.rect(screen, (255, 0, 0), cam.translate((player_state[0][0] - common.pm_player_size, player_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2)))
+        pygame.display.update()
+
+# dev-only offline ui for creating map files
+def editor(screen: pygame.Surface):
+    # import editor only modules only here
+    import pygame.gfxdraw as gfx
+    import json
+    import os
+
+    # init editor vars
+    cam = Camera2D()
+    ui_col = (200, 200, 200)
+
+    edit_mode = 0
+
+    selector = 0
+    max_sel = [2, 0, 2, 0]
+
+    bg_assets = [os.path.join("../assets/backgs/", f) for f in os.listdir("../assets/backgs/") if os.path.isfile(os.path.join("../assets/backgs/", f))]
+    prop_assets = [os.path.join("../assets/props/", f) for f in os.listdir("../assets/props/") if os.path.isfile(os.path.join("../assets/props/", f))]
+
+    # load file if any
+
+    try:
+        with open("edit_map.json", "r") as f:
+            map_data = json.load(f)
+        
+        map_background = bg_assets.index(map_data["map_background"][0])
+        map_background_scale = map_data["map_background"][1]
+
+        map_colliders = map_data["map_colliders"]
+        map_props = map_data["map_props"]
+        map_triggers = map_data["map_triggers"]
+
+        print("successfully loaded edit_map.json")
+
+    except: # if load failed create new map
+        map_background = 0
+        map_background_scale = 1
+        
+        map_colliders = []
+        map_props = []
+        map_triggers = []
+
+    # helper funcs
+
+    def save_map():
+        print("saving edit_map.json")
+
+        with open("edit_map.json", "w") as f:
+            json.dump({
+                "map_background": [bg_assets[map_background], map_background_scale],
+                "map_colliders": map_colliders,
+                "map_props": map_props,
+                "map_triggers": map_triggers
+            }, f)
+
+    def reload_backg() -> pygame.Surface:
+        return pygame.transform.scale_by(pygame.image.load(bg_assets[map_background]), map_background_scale)
+
+    # load assets
+
+    map_background_surf = reload_backg()
+
+    map_prop_surfs = []
+    for p in map_props:
+        map_prop_surfs.append(reload_prop(p))
+
+    is_prim_next = False
+    is_prim_prev = False
+    
+    is_sec_next = False
+    is_sec_prev = False
+
+    left_hold = False
+    right_hold = False
+
+    selected_prop = 0
+    selected_prop_scale = 1
+    selected_prop_surf = reload_prop((prop_assets[selected_prop], 1))
+
+    coll_start_drag = None
+    is_coll_dragging = False
+
+    t = time.time()
+
+    while True:
+        for event in pygame.event.get():
+            if (event.type == QUIT or
+                (event.type == KEYDOWN and event.key == K_ESCAPE)):
+                save_map()
+                exit(0)
+
+        delta_time = time.time() - t
+        t = time.time()
+
+        # input update
+        prim_next = False
+        prim_prev = False
+
+        sec_next = False
+        sec_prev = False
+
+        left_click = False
+        right_click = False
+
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_t]:
+            playtest(screen, map_background_surf, map_colliders, map_props)
+
+            t = time.time()
+            continue
+
+        cam_off = [0, 0]
+        if keys[pygame.K_w]:
+            cam_off[1] -= int(450 * delta_time)
+        if keys[pygame.K_s]:
+            cam_off[1] += int(450 * delta_time)
+        if keys[pygame.K_a]:
+            cam_off[0] -= int(450 * delta_time)
+        if keys[pygame.K_d]:
+            cam_off[0] += int(450 * delta_time)
+
+        cam.offset(*cam_off)
+
+        if keys[pygame.K_e] and not is_prim_next:
+            is_prim_next = True
+            prim_next = True
+        elif not keys[pygame.K_e]:
+            is_prim_next = False
+
+        if keys[pygame.K_q] and not is_prim_prev:
+            is_prim_prev = True
+            prim_prev = True
+        elif not keys[pygame.K_q]:
+            is_prim_prev = False
+
+        if keys[pygame.K_f] and not is_sec_next:
+            is_sec_next = True
+            sec_next = True
+        elif not keys[pygame.K_f]:
+            is_sec_next = False
+
+        if keys[pygame.K_r] and not is_sec_prev:
+            is_sec_prev = True
+            sec_prev = True
+        elif not keys[pygame.K_r]:
+            is_sec_prev = False
+
+        m = pygame.mouse.get_pressed()
+
+        if m[0] and not left_hold:
+            left_hold = True
+            left_click = True
+        elif not m[0]:
+            left_hold = False
+
+        if m[2] and not right_hold:
+            right_hold = True
+            right_click = True
+        elif not m[2]:
+            right_hold = False
+
+        # map update
+
+        screen.fill(BLACK)
+
+        if not map_background_surf == None:
+            bg_rect = map_background_surf.get_rect()
+            bg_rect = (bg_rect[0] - bg_rect.centerx, bg_rect[1] - bg_rect.centery, bg_rect[2], bg_rect[3])
+
+            screen.blit(map_background_surf, cam.translate(bg_rect))
+
+        for i, prop in enumerate(map_props):
+            prop_rect = cam.translate((*prop[2], *map_prop_surfs[i].get_size()))
+            screen.blit(map_prop_surfs[i], prop_rect)
+
+            for i in range(2):
+                gfx.rectangle(screen, (prop_rect[0] + i, prop_rect[1] + i, prop_rect[2] - i * 2, prop_rect[3] - i * 2), (200, 127, 0, 200))
+
+        if edit_mode == 2:
+            selected_prop_surf.set_alpha(127)
+            screen.blit(selected_prop_surf, pygame.mouse.get_pos())
+
+        for coll in map_colliders:
+            coll_rect = cam.translate(coll)
+            gfx.box(screen, coll_rect, (0, 200, 0, 64))
+
+            for i in range(2):
+                gfx.rectangle(screen, (coll_rect[0] + i, coll_rect[1] + i, coll_rect[2] - i * 2, coll_rect[3] - i * 2), (0, 200, 0, 200))
+
+            gfx.filled_circle(screen, coll_rect[0] + coll_rect[2] // 2, coll_rect[1] + coll_rect[3] // 2, 4, (0, 200, 0, 200))
+
+        if edit_mode == 1 and is_coll_dragging:
+            start_pos = cam.translate((*coll_start_drag, 0, 0))[0:2]
+            m = pygame.mouse.get_pos()
+            coll_rect = (*start_pos, m[0] - start_pos[0], m[1] - start_pos[1])
+
+            gfx.box(screen, coll_rect, (0, 200, 0, 32))
+
+            for i in range(2):
+                gfx.rectangle(screen, (coll_rect[0] + i, coll_rect[1] + i, coll_rect[2] - i * 2, coll_rect[3] - i * 2), (0, 200, 0, 100))
+        
+        for trig in map_triggers:
+            pass
+
+        # editor ui update
+
+        if sec_next:
+            selector = min(max_sel[edit_mode], selector + 1)
+        elif sec_prev:
+            selector = max(0, selector - 1)
+
+        if selector == 0:
+            if prim_next:
+                edit_mode = min(3, edit_mode + 1)
+            elif prim_prev:
+                edit_mode = max(0, edit_mode - 1)
+
+        gfx.box(screen, (5, 5, 450, 180), (16, 16, 16, 200))
+        common.game_font.render_to(screen, (15, 25 + 20 * selector), ">", ui_col)
+        common.game_font.render_to(screen, (15, 135), "q,e = interact with setting; r,f = select setting", (127, 127, 127))
+        common.game_font.render_to(screen, (15, 155), "t = in-editor playtest (esc to exit playtest)", (127, 127, 127))
+
+        if edit_mode == 0:
+            if prim_next and selector == 1:
+                map_background = min(len(bg_assets) - 1, map_background + 1)
+                map_background_surf = reload_backg()
+            elif prim_prev and selector == 1:
+                map_background = max(0, map_background - 1)
+                map_background_surf = reload_backg()
+
+            if prim_next and selector == 2:
+                map_background_scale = round(map_background_scale / .8, 6)
+                map_background_surf = reload_backg()
+            elif prim_prev and selector == 2:
+                map_background_scale = round(max(0, map_background_scale * .8), 6)
+                map_background_surf = reload_backg()
+
+            common.game_font.render_to(screen, (35, 25), "Editor Mode: select background", ui_col)
+            common.game_font.render_to(screen, (35, 45), f"Background Image: {bg_assets[map_background]}", ui_col)
+            common.game_font.render_to(screen, (35, 65), f"Background Scale: {map_background_scale}", ui_col)
+
+        elif edit_mode == 1:
+            common.game_font.render_to(screen, (35, 25), "Editor Mode: edit colliders", ui_col)
+
+            common.game_font.render_to(screen, (15, 90), "left click and drag = add new wall collider", (127, 127, 127))
+            common.game_font.render_to(screen, (15, 110), "right click = remove a wall collider", (127, 127, 127))
+
+            if left_click:
+                coll_start_drag = cam.translate_inverse(pygame.mouse.get_pos())
+                is_coll_dragging = True
+            elif is_coll_dragging and not left_hold:
+                coll = (*coll_start_drag, *cam.translate_inverse(pygame.mouse.get_pos()))
+
+                # convert [x1 y1 x2 y2] to [left top width height] 
+                coll = (min(coll[0], coll[2]), min(coll[1], coll[3]), max(coll[0], coll[2]) - min(coll[0], coll[2]), max(coll[1], coll[3]) - min(coll[1], coll[3]))
+                
+                if not min(coll[2], coll[3]) == 0:
+                    map_colliders.append(coll)
+                is_coll_dragging = False
+
+            if right_click:
+                scan_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                for i in range(len(map_colliders) - 1, -1, -1):
+                    coll = pygame.Rect(map_colliders[i])
+
+                    if coll.collidepoint(scan_pos):
+                        map_colliders.pop(i)
+                        break
+
+        elif edit_mode == 2:
+            if prim_next and selector == 1:
+                selected_prop = min(len(prop_assets) - 1, selected_prop + 1)
+                selected_prop_surf = reload_prop((prop_assets[selected_prop], selected_prop_scale))
+            elif prim_prev and selector == 1:
+                selected_prop = max(0, selected_prop - 1)
+                selected_prop_surf = reload_prop((prop_assets[selected_prop], selected_prop_scale))
+            
+            if prim_next and selector == 2:
+                selected_prop_scale = round(selected_prop_scale / .8, 6)
+                selected_prop_surf = reload_prop((prop_assets[selected_prop], selected_prop_scale))
+            elif prim_prev and selector == 2:
+                selected_prop_scale = round(max(0, selected_prop_scale * .8), 6)
+                selected_prop_surf = reload_prop((prop_assets[selected_prop], selected_prop_scale))
+
+            common.game_font.render_to(screen, (35, 25), "Editor Mode: edit props", ui_col)
+            common.game_font.render_to(screen, (35, 45), f"Prop Image: {prop_assets[selected_prop]}", ui_col)
+            common.game_font.render_to(screen, (35, 65), f"Prop Scale: {selected_prop_scale}", ui_col)
+
+            common.game_font.render_to(screen, (15, 90), "left click and drag = add new prop", (127, 127, 127))
+            common.game_font.render_to(screen, (15, 110), "right click = remove a prop", (127, 127, 127))
+
+            if left_click:
+                prop_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                prop = (prop_assets[selected_prop], selected_prop_scale, prop_pos)
+                map_props.append(prop)
+
+                map_prop_surfs.append(reload_prop(prop))
+
+            if right_click:
+                scan_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                for i in range(len(map_props) - 1, -1, -1):
+                    prop = map_props[i]
+                    prop_pos = pygame.Rect(prop[2][0], prop[2][1], *map_prop_surfs[i].get_size())
+
+                    if prop_pos.collidepoint(scan_pos):
+                        map_props.pop(i)
+                        map_prop_surfs.pop(i)
+                        break
+        
+        elif edit_mode == 3:
+            common.game_font.render_to(screen, (35, 25), "Editor Mode: edit triggers", ui_col)
+
+            common.game_font.render_to(screen, (15, 110), "Todo triggers, will be used for interactibles", (127, 127, 127))
+
+        pygame.display.update()
+
+
 def init_game() -> pygame.Surface:
     """Pygame init function."""
     pygame.init()
@@ -418,6 +810,7 @@ def main(scene_id: int = 0) -> None:
     screen = init_game()
     
     # p_test(screen)
+    # editor(screen)
 
     try:
         # simple scene switcher, lobby or level return the index of the next scene (None = exit)
