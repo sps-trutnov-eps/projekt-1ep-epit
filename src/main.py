@@ -571,28 +571,28 @@ def editor(screen: pygame.Surface):
 
         cam.offset(*cam_off)
 
-        if keys[pygame.K_e] and not is_prim_next:
+        if keys[pygame.K_RIGHT] and not is_prim_next:
             is_prim_next = True
             prim_next = True
-        elif not keys[pygame.K_e]:
+        elif not keys[pygame.K_RIGHT]:
             is_prim_next = False
 
-        if keys[pygame.K_q] and not is_prim_prev:
+        if keys[pygame.K_LEFT] and not is_prim_prev:
             is_prim_prev = True
             prim_prev = True
-        elif not keys[pygame.K_q]:
+        elif not keys[pygame.K_LEFT]:
             is_prim_prev = False
 
-        if keys[pygame.K_f] and not is_sec_next:
+        if keys[pygame.K_DOWN] and not is_sec_next:
             is_sec_next = True
             sec_next = True
-        elif not keys[pygame.K_f]:
+        elif not keys[pygame.K_DOWN]:
             is_sec_next = False
 
-        if keys[pygame.K_r] and not is_sec_prev:
+        if keys[pygame.K_UP] and not is_sec_prev:
             is_sec_prev = True
             sec_prev = True
-        elif not keys[pygame.K_r]:
+        elif not keys[pygame.K_UP]:
             is_sec_prev = False
 
         m = pygame.mouse.get_pressed()
@@ -665,9 +665,9 @@ def editor(screen: pygame.Surface):
             elif prim_prev:
                 edit_mode = max(0, edit_mode - 1)
 
-        gfx.box(screen, (5, 5, 450, 180), (16, 16, 16, 200))
+        gfx.box(screen, (5, 5, 500, 180), (16, 16, 16, 200))
         common.game_font.render_to(screen, (15, 25 + 20 * selector), ">", ui_col)
-        common.game_font.render_to(screen, (15, 135), "q,e = interact with setting; r,f = select setting", (127, 127, 127))
+        common.game_font.render_to(screen, (15, 135), "left,right arrows = interact with setting; up,down = select setting", (127, 127, 127))
         common.game_font.render_to(screen, (15, 155), "t = in-editor playtest (esc to exit playtest)", (127, 127, 127))
 
         if edit_mode == 0:
