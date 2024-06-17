@@ -8,8 +8,14 @@ from pygame import K_ESCAPE, KEYDOWN, QUIT
 SCREEN_RESOLUTION = (1280, 960)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GREY = (127, 127, 127)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
+
+TEAMS = {
+    "ep": BLUE,
+    "it": RED,
+}
 
 def handle_events() -> bool:
     """Events handling function."""
@@ -408,7 +414,7 @@ class Camera2D:
         return (pos[0] + self.x - (SCREEN_RESOLUTION[0] // 2), pos[1] + self.y - (SCREEN_RESOLUTION[1] // 2))
 
 def reload_prop(p) -> pygame.Surface:
-    return pygame.transform.scale_by(pygame.image.load(p[0]), p[1])
+    return pygame.transform.scale_by(pygame.image.load(p[0]), p[1]).convert_alpha()
 
 # dev-only in editor playtest with a simple player
 def playtest(screen: pygame.Surface, bg: pygame.Surface, colls: list, props: list):
@@ -461,7 +467,7 @@ def editor(screen: pygame.Surface):
     edit_mode = 0
 
     selector = 0
-    max_sel = [2, 0, 2, 0]
+    max_sel = [2, 0, 2, 1, 2]
 
     bg_assets = [os.path.join("../assets/backgs/", f) for f in os.listdir("../assets/backgs/") if os.path.isfile(os.path.join("../assets/backgs/", f))]
     prop_assets = [os.path.join("../assets/props/", f) for f in os.listdir("../assets/props/") if os.path.isfile(os.path.join("../assets/props/", f))]
@@ -477,7 +483,8 @@ def editor(screen: pygame.Surface):
 
         map_colliders = map_data["map_colliders"]
         map_props = map_data["map_props"]
-        map_triggers = map_data["map_triggers"]
+        map_spawnpoints = map_data.get("map_spawnpoints", {})
+        map_interactibles = map_data.get("map_interactibles", [])
 
         print("successfully loaded edit_map.json")
 
@@ -487,7 +494,8 @@ def editor(screen: pygame.Surface):
         
         map_colliders = []
         map_props = []
-        map_triggers = []
+        map_spawnpoints = {}
+        map_interactibles = []
 
     # helper funcs
 
@@ -499,11 +507,12 @@ def editor(screen: pygame.Surface):
                 "map_background": [bg_assets[map_background], map_background_scale],
                 "map_colliders": map_colliders,
                 "map_props": map_props,
-                "map_triggers": map_triggers
+                "map_spawnpoints": map_spawnpoints,
+                "map_interactibles": map_interactibles,
             }, f)
 
     def reload_backg() -> pygame.Surface:
-        return pygame.transform.scale_by(pygame.image.load(bg_assets[map_background]), map_background_scale)
+        return pygame.transform.scale_by(pygame.image.load(bg_assets[map_background]), map_background_scale).convert()
 
     # load assets
 
@@ -525,6 +534,11 @@ def editor(screen: pygame.Surface):
     selected_prop = 0
     selected_prop_scale = 1
     selected_prop_surf = reload_prop((prop_assets[selected_prop], 1))
+
+    selected_team_index = 0
+
+    selected_interactible_type = 0
+    selected_interactible_dist = 50
 
     coll_start_drag = None
     is_coll_dragging = False
@@ -649,8 +663,20 @@ def editor(screen: pygame.Surface):
             for i in range(2):
                 gfx.rectangle(screen, (coll_rect[0] + i, coll_rect[1] + i, coll_rect[2] - i * 2, coll_rect[3] - i * 2), (0, 200, 0, 100))
         
-        for trig in map_triggers:
-            pass
+        for team, point in map_spawnpoints.items():
+            point = cam.translate((*point, 0, 0))
+
+            common.game_font.render_to(screen, (point[0] - common.game_font.get_rect("spawn - " + team).centerx, point[1] - 20), "spawn - " + team, WHITE)
+            gfx.filled_circle(screen, point[0], point[1], 6, TEAMS[team])
+        
+        for inter in map_interactibles:
+            inter_pos = cam.translate((*inter[2], 0, 0))
+
+            # common.game_font.render_to(screen, (inter_pos[0] - common.game_font.get_rect("interact").centerx, inter_pos[1] - 20), "interact", WHITE)
+            gfx.filled_circle(screen, inter_pos[0], inter_pos[1], 6, (*BLUE, 127))
+            
+            for i in range(2):
+                gfx.circle(screen, inter_pos[0], inter_pos[1], inter[1] - i, (*BLUE, 200))
 
         # editor ui update
 
@@ -661,7 +687,7 @@ def editor(screen: pygame.Surface):
 
         if selector == 0:
             if prim_next:
-                edit_mode = min(3, edit_mode + 1)
+                edit_mode = min(4, edit_mode + 1)
             elif prim_prev:
                 edit_mode = max(0, edit_mode - 1)
 
@@ -737,7 +763,7 @@ def editor(screen: pygame.Surface):
             common.game_font.render_to(screen, (35, 45), f"Prop Image: {prop_assets[selected_prop]}", ui_col)
             common.game_font.render_to(screen, (35, 65), f"Prop Scale: {selected_prop_scale}", ui_col)
 
-            common.game_font.render_to(screen, (15, 90), "left click and drag = add new prop", (127, 127, 127))
+            common.game_font.render_to(screen, (15, 90), "left click = add a new prop", (127, 127, 127))
             common.game_font.render_to(screen, (15, 110), "right click = remove a prop", (127, 127, 127))
 
             if left_click:
@@ -761,9 +787,68 @@ def editor(screen: pygame.Surface):
                         break
         
         elif edit_mode == 3:
-            common.game_font.render_to(screen, (35, 25), "Editor Mode: edit triggers", ui_col)
+            if prim_next and selector == 1:
+                selected_team_index = min(len(TEAMS) - 1, selected_team_index + 1)
+            elif prim_prev and selector == 1:
+                selected_team_index = max(0, selected_team_index - 1)
 
-            common.game_font.render_to(screen, (15, 110), "Todo triggers, will be used for interactibles", (127, 127, 127))
+            common.game_font.render_to(screen, (35, 25), "Editor Mode: edit spawnpoints", ui_col)
+            common.game_font.render_to(screen, (35, 45), f"Selected Team: {list(TEAMS.keys())[selected_team_index]}", ui_col)
+
+            common.game_font.render_to(screen, (15, 90), "left click = place a spawn point", (127, 127, 127))
+            common.game_font.render_to(screen, (15, 110), "right click = remove a spawn point", (127, 127, 127))
+
+            if left_click:
+                spawn_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                map_spawnpoints[list(TEAMS.keys())[selected_team_index]] = spawn_pos
+
+            if right_click:
+                scan_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                keys = list(map_spawnpoints.keys())
+                for i in range(len(keys) - 1, -1, -1):
+                    spawn = map_spawnpoints[keys[i]]
+                    spawn_pos = pygame.Rect(spawn[0] - 6, spawn[1] - 6, 12, 12)
+
+                    if spawn_pos.collidepoint(scan_pos):
+                        map_spawnpoints.pop(keys[i])
+                        break
+
+        elif edit_mode == 4:
+            # if lest here if more types are added
+            # if prim_next and selector == 1:
+            #     selected_interactible_type = min(len(TEAMS) - 1, selected_interactible_type + 1)
+            # elif prim_prev and selector == 1:
+            #     selected_interactible_type = max(0, selected_interactible_type - 1)
+
+            if prim_next and selector == 2:
+                selected_interactible_dist = max(selected_interactible_dist + 1, int(selected_interactible_dist // .9))
+            elif prim_prev and selector == 2:
+                selected_interactible_dist = max(1, int(selected_interactible_dist * .9))
+
+            common.game_font.render_to(screen, (35, 25), "Editor Mode: edit interactibles", ui_col)
+            common.game_font.render_to(screen, (35, 45), "Interactible Type: minigame", ui_col)
+            common.game_font.render_to(screen, (35, 65), f"Interactible Size: {selected_interactible_dist}", ui_col)
+
+            common.game_font.render_to(screen, (15, 90), "left click = place an interactible", (127, 127, 127))
+            common.game_font.render_to(screen, (15, 110), "right click = remove an interactible", (127, 127, 127))
+
+            if left_click:
+                spawn_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                map_interactibles.append((selected_interactible_type, selected_interactible_dist, spawn_pos))
+
+            if right_click:
+                scan_pos = cam.translate_inverse(pygame.mouse.get_pos())
+
+                for i in range(len(map_interactibles) - 1, -1, -1):
+                    inter = map_interactibles[i]
+                    inter_pos = pygame.Rect(inter[2][0] - inter[1], inter[2][1] - inter[1], inter[1] * 2, inter[1] * 2)
+
+                    if inter_pos.collidepoint(scan_pos):
+                        map_interactibles.pop(i)
+                        break
 
         pygame.display.update()
 
