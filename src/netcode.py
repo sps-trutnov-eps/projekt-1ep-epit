@@ -20,7 +20,7 @@ import random
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 16
+protocol_version = 17
 packet_len_bytes = 4
 target_ticktime = (1 / 20) # ideal ~20 TPS target
 
@@ -59,7 +59,6 @@ class ClientState:
     player_name: str
     game_state: int # 0 = in lobby, 1 = in game
 
-    # list of teams which is a list of players which is a (p_name, p_color, p_model)
     on_lobby_info: Callable
     on_game_result: Callable
 
@@ -231,11 +230,11 @@ def start_game():
     
     send_packet(client_state.server_conn, ("c_host_game_start",))
 
-def change_team(index: int):
+def change_team(team: str):
     if not client_state.game_state == 0:
         raise ValueError("player can only change teams if in lobby, not in game!") # can be changed if we allow changing teams while in-game
 
-    send_packet(client_state.server_conn, ("c_change_team", index))
+    send_packet(client_state.server_conn, ("c_change_team", team))
 
 def update_player_info(pos: list[float], vel: list[float]):
     send_packet(client_state.server_conn, ("c_player_info", pos, vel))
@@ -275,8 +274,8 @@ def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks:
             if response[0] == "s_init_name_taken":
                 return (False, "Player name is already taken.")
 
-            elif response[0] == "s_init_match_running":
-                return (False, "Match has already started, wait for it to end.")
+            elif response[0] == "s_init_ingame":
+                return (False, "Game has already started, wait for it to end.")
 
             elif response[0] == "s_unexpected_packet":
                 return (False, "Internal communication error... (spam the devs to punish them)")
@@ -328,8 +327,8 @@ class ServerState:
 
     remote_locks: dict[str, threading.Lock]
     
-    # lobby data (dict indexed by player_name containing [team_index, player_num])
-    lobby_players: dict[str, list[int]]
+    # lobby data (dict indexed by player_name containing [team_name, skin_index])
+    lobby_players: dict[str, tuple[str, int]]
     host_players: set[str]
 
     # in-game data (dict indexed by player_name containing [position, velocity]
@@ -375,6 +374,12 @@ def server_handle_connect(req: socket.socket) -> list | None:
         print("server: refused new connection due to name being taken!")
 
         send_packet(req, ("s_init_name_taken",))
+        return
+
+    elif not server_state.game_state == 0:
+        print("server: refused new connection due to not being in lobby!")
+
+        send_packet(req, ("s_init_ingame",))
         return
 
     return init_packet
@@ -430,7 +435,7 @@ def server_tickloop():
             player_name = init_packet[1]
             client_player_names[c_sock] = player_name
 
-            server_state.lobby[player_name] = [0, random.randint(1, 5)]
+            server_state.lobby[player_name] = ["it", random.randint(1, 5)]
             invalidate_lobby()
 
             lobby_fresh_clients.append(c_sock)

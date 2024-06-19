@@ -1,8 +1,10 @@
 import time
-from minig import switch_to_minigame
+import minig
 import netcode
 import common
 import pygame
+import json
+import random
 from pygame import K_ESCAPE, KEYDOWN, QUIT
 
 SCREEN_RESOLUTION = (1280, 960)
@@ -107,8 +109,8 @@ def main_menu(screen: pygame.Surface) -> int:
 
     game_mode = 0
 
-    join_render_area = (SCREEN_RESOLUTION[0] // 2 - 100, SCREEN_RESOLUTION[1] // 2 + 150, 200, 50)
-    host_render_area = (SCREEN_RESOLUTION[0] // 2 - 100, SCREEN_RESOLUTION[1] // 2 + 225, 200, 50)
+    join_render_area = (SCREEN_RESOLUTION[0] // 2 - 100 + 150, SCREEN_RESOLUTION[1] // 2 - 25 - 40, 200, 50)
+    host_render_area = (SCREEN_RESOLUTION[0] // 2 - 100 + 150, SCREEN_RESOLUTION[1] // 2 - 25 + 40, 200, 50)
 
     while game_mode == 0:
         for event in pygame.event.get():
@@ -128,6 +130,9 @@ def main_menu(screen: pygame.Surface) -> int:
                 editor(screen)
 
         screen.fill(BLACK)
+
+        common.game_font.render_to(screen, common.center_in_rect((SCREEN_RESOLUTION[0] // 2 - 150 - 48, SCREEN_RESOLUTION[1] // 2, 0, 0), common.game_font.get_rect("EP", size=100)), "EP", TEAMS["ep"], size=100)
+        common.game_font.render_to(screen, common.center_in_rect((SCREEN_RESOLUTION[0] // 2 - 150 + 48, SCREEN_RESOLUTION[1] // 2, 0, 0), common.game_font.get_rect("it", size=100)), "it", TEAMS["it"], size=100)
 
         pygame.draw.rect(screen, (255, 255, 255), join_render_area)
         common.game_font.render_to(screen, common.center_in_rect(join_render_area, common.game_font.get_rect("Join Game")), "Join Game", BLACK)
@@ -176,8 +181,8 @@ def dc_screen(screen: pygame.Surface, message: str):
 
 # == lobby ==
 
-# lobby data (dict indexed by player_name containing [team_index])
-lobby_info: dict[str, list[int]] = None
+# lobby data (dict indexed by player_name containing [team_name, skin_index])
+lobby_info: dict[str, tuple[str, int]] | None = None
 
 # can change team by `netcode.change_team(index)` (only when in lobby)
 
@@ -227,22 +232,21 @@ def lobby(screen: pygame.Surface) -> int:
         knob_position = (position[0] + size[0] - knob_radius, position[1] + knob_radius)
         pygame.draw.circle(surface, knob_color, knob_position, 3)
         
-    running = True
-
     player_state = ([400, 300], [0, 0])
 
     t = time.time()
+    sel_team = "ep"
     
-    while running:
+    while True:
         netcode.client_sync()
         
         if netcode.client_state.game_state == 1: # did the game start?
             return 2
 
-        #if lobby_info == None: # lobby info not yet received
-        #    continue
+        if not lobby_info == None:
+            sel_team = lobby_info[session_info[1]][0]
 
-        host_start_button = (150, 600, 200, 50)
+        host_start_button = (0, 0, 200, 50)
         team_button = (300, 150, 200, 50)
 
         colliders = [
@@ -260,9 +264,9 @@ def lobby(screen: pygame.Surface) -> int:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if common.is_click_on_ui(host_start_button, event):
                     netcode.start_game()
-                    return team
                 if common.is_click_on_ui(team_button, event):
-                    team = 0 if team == 1 else 1
+                    sel_team = "ep" if sel_team == "it" else "it"
+                    netcode.change_team(sel_team)
 
         screen.fill(black)
         
@@ -323,7 +327,7 @@ def lobby(screen: pygame.Surface) -> int:
         # temp color squares, would be replaced with skins if implemented
 
         player_state = common.player_move_update(pygame.key.get_pressed(), delta_time, player_state, colliders)
-        draw_square(screen, (255, 0, 0), player_state[0], common.pm_player_size * 2)
+        draw_square(screen, TEAMS[sel_team], player_state[0], common.pm_player_size * 2)
 
         netcode.update_player_info(player_state[0], player_state[1])
 
@@ -339,7 +343,8 @@ def lobby(screen: pygame.Surface) -> int:
                 # pred_p = common.player_move_update({}, pred_time, (p[0], p[1]), colliders)
                 pred_p = (p[0][0] + p[1][0] * pred_time, p[0][1] + p[1][1] * pred_time) # simple velocity add
 
-                draw_square(screen, (0, 255, 0), pred_p, common.pm_player_size * 2)
+                draw_square(screen, TEAMS[lobby_info[name][0] if not lobby_info == None else "ep"], pred_p, common.pm_player_size * 2)
+                common.game_font.render_to(screen, (pred_p[0] - common.game_font.get_rect(name).centerx, pred_p[1] - 30), name, WHITE)
 
         pygame.display.update()
 
@@ -349,43 +354,6 @@ player_info: dict[str, list] | None = None
 player_info_age: float = 0
 
 game_score: None = None # TODO: set type
-
-def set_player_info(players: dict):
-    global player_info
-    global player_info_age
-
-    player_info = players
-    player_info_age = time.time()
-
-def set_game_score(score: list):
-    global game_score
-    game_score = score
-
-def level(screen: pygame.Surface, land: str, score: int = 0) -> int:
-    """Level function."""
-    clock = pygame.time.Clock()
-    sprites = pygame.sprite.Group()
-    team = ("ep" if land[0] == "T10" else "it")
-
-    while handle_events():
-        netcode.client_sync()
-
-        # minigame = {
-        #     "classroom": "minigame"
-        # }
-
-        # minig.switch_to_minigame( minigame[room], team, room, land, score, screen)
-
-        sprites.update()
-
-        screen.fill(BLACK)
-        sprites.draw(screen)
-        pygame.display.update()
-        clock.tick(60)
-    
-    return 1 # return to lobby
-
-# == edit mode ==
 
 class Camera2D:
     __slots__ = ["x", "y"]
@@ -413,17 +381,137 @@ class Camera2D:
     def translate_inverse(self, pos) -> tuple[int, int]:
         return (pos[0] + self.x - (SCREEN_RESOLUTION[0] // 2), pos[1] + self.y - (SCREEN_RESOLUTION[1] // 2))
 
+def set_player_info(players: dict):
+    global player_info
+    global player_info_age
+
+    player_info = players
+    player_info_age = time.time()
+
+def set_game_score(score: list):
+    global game_score
+    game_score = score
+
+# map_path = "../assets/default_map.json"
+map_path = "edit_map.json"
+
+# map_path: str, land: str, score: int = 0
+def level(screen: pygame.Surface) -> int:
+    """Level function."""
+
+    pygame.display.set_caption("In-Game")
+
+    # load selected map file
+
+    with open(map_path, "r") as f:
+        map_data = json.load(f)
+
+    bg_surface = pygame.transform.scale_by(pygame.image.load(map_data["map_background"][0]), map_data["map_background"][1]).convert() 
+    bg_rect = bg_surface.get_rect()
+    bg_rect = (bg_rect[0] - bg_rect.centerx, bg_rect[1] - bg_rect.centery, bg_rect[2], bg_rect[3])
+
+    inter_surface = pygame.image.load("../assets/interact_notification.png")
+    inter_rect = inter_surface.get_rect()
+    inter_rect = (inter_rect[0] - inter_rect.centerx, inter_rect[1] - inter_rect.centery, inter_rect[2], inter_rect[3])
+
+    map_colliders = map_data["map_colliders"]
+    map_interactibles = map_data["map_interactibles"]
+
+    prop_preload_surfs = {}
+    for p in map_data["map_props"]:
+        if p[0] in prop_preload_surfs:
+            continue
+
+        prop_preload_surfs[p[0]] = pygame.image.load(p[0]).convert_alpha() # unscaled, unconverted, only raw image data
+
+    map_props = []
+    for p in map_data["map_props"]:
+        prop_surf = pygame.transform.scale_by(prop_preload_surfs[p[0]], p[1]).convert_alpha()
+        map_props.append((prop_surf, p[2]))
+
+    # game loop
+
+    clock = pygame.time.Clock()
+    team = lobby_info[session_info[1]][0]
+
+    cam = Camera2D()
+    player_state = [map_data["map_spawnpoints"][team], (0, 0)]
+
+    while handle_events():
+        netcode.client_sync()
+
+        # game logic update
+        delta_time = clock.get_time() / 1000 # milisec -> sec
+
+        keys = pygame.key.get_pressed()
+        player_state = common.player_move_update(keys, delta_time, player_state, map_colliders)
+        netcode.update_player_info(player_state[0], player_state[1])
+
+        cam_pos = cam.get_pos()
+        cam_diff = (player_state[0][0] - cam_pos[0], player_state[0][1] - cam_pos[1])
+        cam_pos = (cam_pos[0] + cam_diff[0] * .09, cam_pos[1] + cam_diff[1] * .09) # light camera interp
+        cam.set_pos(*cam_pos)
+
+        is_in_interact = False
+
+        for inter in map_interactibles:
+            dist_squared = (player_state[0][0] - inter[2][0]) ** 2 + (player_state[0][1] - inter[2][1]) ** 2
+            if dist_squared < inter[1] ** 2:
+                is_in_interact = True
+
+                if keys[pygame.K_e]:
+                    pass # minig.switch_to_minigame(random.choice(list(minig.minigame_lib.keys())), team, asdas, land, 123512621452153215, screen)
+
+        screen.fill(BLACK)
+
+        # map rendering
+        screen.blit(bg_surface, cam.translate(bg_rect))
+        for p in map_props:
+            screen.blit(p[0], cam.translate((*p[1], 0, 0)))
+
+        # player rendering
+        pred_time = (time.time() - player_info_age) * .9
+
+        if not player_info == None:
+            for name, p in player_info.items():
+                if name == session_info[1]: # do not render the local player
+                    continue
+                
+                # TODO: prediction can be improved
+
+                # pred_p = common.player_move_update({}, pred_time, (p[0], p[1]), colliders)
+                pred_p = cam.translate((p[0][0] + p[1][0] * pred_time - common.pm_player_size, p[0][1] + p[1][1] * pred_time - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2)) # simple velocity add
+
+                pygame.draw.rect(screen, TEAMS[lobby_info[name][0]], pred_p)
+                common.game_font.render_to(screen, (pred_p[0] - common.game_font.get_rect(name).centerx, pred_p[1] - 30, 0, 0), name, WHITE)
+        
+        pygame.draw.rect(screen, TEAMS[team], cam.translate((player_state[0][0] - common.pm_player_size, player_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2)))
+
+        if is_in_interact:
+            screen.blit(inter_surface, cam.translate((inter_rect[0] + player_state[0][0], inter_rect[1] + player_state[0][1] - 45, *inter_rect[2:4])))
+
+        pygame.display.update()
+        clock.tick(60)
+    
+    return 1 # return to lobby
+
+# == edit mode ==
+
 def reload_prop(p) -> pygame.Surface:
     return pygame.transform.scale_by(pygame.image.load(p[0]), p[1]).convert_alpha()
 
 # dev-only in editor playtest with a simple player
-def playtest(screen: pygame.Surface, bg: pygame.Surface, colls: list, props: list):
+def playtest(screen: pygame.Surface, bg: pygame.Surface, colls: list, props: list, inters: list):
     cam = Camera2D()
     player_state = ([0, 0], [0, 0])
 
     prop_surfs = []
     for prop in props:
         prop_surfs.append(reload_prop(prop))
+
+    inter_surface = pygame.image.load("../assets/interact_notification.png")
+    inter_rect = inter_surface.get_rect()
+    inter_rect = (inter_rect[0] - inter_rect.centerx, inter_rect[1] - inter_rect.centery, inter_rect[2], inter_rect[3])
 
     t = time.time()
 
@@ -450,14 +538,18 @@ def playtest(screen: pygame.Surface, bg: pygame.Surface, colls: list, props: lis
             prop_rect = cam.translate((*prop[2], *prop_surfs[i].get_size()))
             screen.blit(prop_surfs[i], prop_rect)
 
+        for inter in inters:
+            dist_squared = (player_state[0][0] - inter[2][0]) ** 2 + (player_state[0][1] - inter[2][1]) ** 2
+            if dist_squared < inter[1] ** 2:
+                screen.blit(inter_surface, cam.translate((inter_rect[0] + player_state[0][0], inter_rect[1] + player_state[0][1] - 45, *inter_rect[2:4])))
+
         pygame.draw.rect(screen, (255, 0, 0), cam.translate((player_state[0][0] - common.pm_player_size, player_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2)))
         pygame.display.update()
 
-# dev-only offline ui for creating map files
+# dev-only offline ui for creating map files (i love crunch time - alter)
 def editor(screen: pygame.Surface):
     # import editor only modules only here
     import pygame.gfxdraw as gfx
-    import json
     import os
 
     # init editor vars
@@ -568,7 +660,7 @@ def editor(screen: pygame.Surface):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_t]:
-            playtest(screen, map_background_surf, map_colliders, map_props)
+            playtest(screen, map_background_surf, map_colliders, map_props, map_interactibles)
 
             t = time.time()
             continue
