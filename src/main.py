@@ -483,7 +483,7 @@ def level(screen: pygame.Surface) -> int:
                 pred_p = cam.translate((p[0][0] + p[1][0] * pred_time - common.pm_player_size, p[0][1] + p[1][1] * pred_time - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2)) # simple velocity add
 
                 pygame.draw.rect(screen, TEAMS[lobby_info[name][0]], pred_p)
-                common.game_font.render_to(screen, (pred_p[0] - common.game_font.get_rect(name).centerx, pred_p[1] - 30, 0, 0), name, WHITE)
+                common.game_font.render_to(screen, (pred_p[0] - common.game_font.get_rect(name).centerx + common.pm_player_size, pred_p[1] - 30, 0, 0), name, WHITE)
         
         pygame.draw.rect(screen, TEAMS[team], cam.translate((player_state[0][0] - common.pm_player_size, player_state[0][1] - common.pm_player_size, common.pm_player_size * 2, common.pm_player_size * 2)))
 
