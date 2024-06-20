@@ -5,12 +5,17 @@ import minigames.test as mini_test
 import minigames.piano as piano
 import minigames.podvadeni as mini_podvadeni
 import minigames.invaders as invaders
+import minigames.aim as mini_aim
+import minigames.minihra_klikání as mini_klik
+
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
     "piano": piano.piano,
     "podvadeni": mini_podvadeni.podvadeni,
     "invaders": invaders.mini_invaders,
+    "klikani": mini_klik.mini_klik,
+    "aim": mini_aim.mini_aim,
 }
 
 def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
