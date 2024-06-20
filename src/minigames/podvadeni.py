@@ -1,7 +1,7 @@
 import pygame
 import minigames.minigame_base as mini
 import random
-def podvadeni():
+def podvadeni(screen: pygame.Surface):
     vyhrál = False
     completion_meter = pygame.Rect(50, 50, 300, 30)
     completion = pygame.Rect(50, 50, 300, 30)

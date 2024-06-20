@@ -6,7 +6,6 @@ import minigames.piano as piano
 import minigames.podvadeni as mini_podvadeni
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
-    "test": mini_test.test_minigame,
     "piano": piano.piano,
     "podvadeni": mini_podvadeni.podvadeni
 }
