@@ -140,6 +140,9 @@ questions = [
     }
 ]
 
+# Přidání počítadla správných odpovědí
+correct_answers_count = 0
+
 # Funkce pro vykreslení úvodní obrazovky
 def draw_start_screen():
     window.fill(WHITE)
@@ -184,16 +187,27 @@ def draw_question_screen(question_data):
 
 # Funkce pro vykreslení obrazovky se zpětnou vazbou
 def draw_feedback_screen(is_correct):
+    global correct_answers_count
     window.fill(WHITE)
     font = pygame.font.SysFont(None, 64)
     if is_correct:
         feedback_text = font.render("Správně!", True, GREEN)
+        correct_answers_count += 1  # Zvýšení počítadla správných odpovědí
     else:
         feedback_text = font.render("Špatně!", True, RED)
     feedback_text_rect = feedback_text.get_rect(center=(screen_width // 2, screen_height // 2))
     window.blit(feedback_text, feedback_text_rect)
     pygame.display.flip()
     pygame.time.delay(2000)
+    if correct_answers_count >= 10:
+        pygame.quit()
+        sys.exit()
+
+# Funkce pro vykreslení počítadla správných odpovědí
+def draw_counter():
+    font = pygame.font.SysFont(None, 36)
+    counter_text = font.render(f"Správné odpovědi: {correct_answers_count}", True, BLACK)
+    window.blit(counter_text, (screen_width - 300, 10))
 
 # Hlavní smyčka
 running = True
@@ -219,14 +233,17 @@ while running:
                             draw_feedback_screen(is_correct)
                             question_asked = False
 
-    window.fill(WHITE)
-
     if not game_ready:
         draw_start_screen()
     elif game_ongoing and not question_asked:
         current_question = random.choice(questions)
         option_rects = draw_question_screen(current_question)
         question_asked = True
+
+    if game_ongoing:
+        draw_counter()
+
+    pygame.display.flip()
 
 pygame.quit()
 sys.exit()
