@@ -48,7 +48,8 @@ while True:
             timer=2
     if timer>0:
         timer-=1
-        
+    if len(rada)>10:
+        print("výhra")
     if y!=-1:
         if z==0:
             barva-=1
