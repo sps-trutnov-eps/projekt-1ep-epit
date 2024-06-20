@@ -34,6 +34,8 @@ def mini_terf():
             else:
                 print("netrefa")
         
+        mini.mini_frame()
+
         if timer!=0:
             timer-=1
         if 200<hlava_x+smer<1000:

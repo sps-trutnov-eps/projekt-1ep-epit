@@ -34,5 +34,6 @@ def mini_kolecko():
         if timer>0:
             timer-=1
         mini.mini_surface.fill((255,255,255))
+        mini.mini_frame()
         pygame.draw.ellipse(mini.mini_surface,(0,0,0),(misto_x,misto_y,100,100))
         pygame.display.update()

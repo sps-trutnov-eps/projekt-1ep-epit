@@ -1,8 +1,9 @@
 import sys
 import random
 import pygame
+import minigames.minigame_base as mini
 
-def piano(screen: pygame.Surface):
+def piano():
     barva=(255,0,0)
     timer=0
     score=0
@@ -45,18 +46,20 @@ def piano(screen: pygame.Surface):
                 timer=200
                 barva=(0,255,0)
                 
+        mini.mini_frame()
+        
         if timer!=0:
             timer-=1
-        screen.fill((255, 255, 255))
+        mini.mini_surface.fill((255, 255, 255))
         if timer==0:
             barva=(255,0,0)
         if score>10 and vyhra==0:
             return mini.win_minigame()
-        pygame.draw.rect(screen,barva, (0, rozliseni_okna[1]-100, rozliseni_okna[0],100))
-        pygame.draw.rect(screen, (0, 0, 0), (ctverec_x, ctverec_y, 100, 100))
-        screen.blit(text1, (415, rozliseni_okna[1]-100))
-        screen.blit(text2, (515, rozliseni_okna[1]-100))
-        screen.blit(text3, (615, rozliseni_okna[1]-100))
-        screen.blit(text4, (715, rozliseni_okna[1]-100))
-        screen.blit(text5, (rozliseni_okna[0]/2-40, 100))
+        pygame.draw.rect(mini.mini_surface,barva, (0, rozliseni_okna[1]-100, rozliseni_okna[0],100))
+        pygame.draw.rect(mini.mini_surface, (0, 0, 0), (ctverec_x, ctverec_y, 100, 100))
+        mini.mini_surface.blit(text1, (415, rozliseni_okna[1]-100))
+        mini.mini_surface.blit(text2, (515, rozliseni_okna[1]-100))
+        mini.mini_surface.blit(text3, (615, rozliseni_okna[1]-100))
+        mini.mini_surface.blit(text4, (715, rozliseni_okna[1]-100))
+        mini.mini_surface.blit(text5, (rozliseni_okna[0]/2-40, 100))
         pygame.display.update()

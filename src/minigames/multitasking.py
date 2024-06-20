@@ -76,6 +76,7 @@ def mini_multi():
         mini.mini_surface.blit(text,(910,710))
         text=font.render(cislo, True, (0, 0, 0))
         mini.mini_surface.blit(text,(900,200))
+        mini.mini_frame()
         pygame.draw.ellipse(mini.mini_surface,(0,0,0),(mic_x,mic_y,30,30))
         pygame.draw.rect(mini.mini_surface,(0,0,0),(hrac,800,100,20))
         pygame.draw.rect(mini.mini_surface,(0,0,0),(630,0,20,970))

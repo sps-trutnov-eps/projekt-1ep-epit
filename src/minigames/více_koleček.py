@@ -13,8 +13,8 @@ def mini_vic_kolecek():
         kola.append(random.randint(50,1230))
         kola.append(random.randint(50,910))
         kola.append(random.randint(50,100))
-    okno = pygame.display.set_mode(rozliseni_okna)
 
+    mini.mini_frame()
 
     while True:
         for udalost in pygame.event.get():
@@ -44,8 +44,8 @@ def mini_vic_kolecek():
                 else:
                     return mini.fail_minigame()
         kola[random.randint(0,9)*3+2]-=score**(2/3)/100
-        okno.fill((255,255,255))
+        mini.mini_surface.fill((255,255,255))
         for i in range(10):
-            pygame.draw.ellipse(okno,(0,0,0),(kola[i*3],kola[i*3+1],kola[i*3+2],kola[i*3+2]))
+            pygame.draw.ellipse(mini.mini_surface,(0,0,0),(kola[i*3],kola[i*3+1],kola[i*3+2],kola[i*3+2]))
         pygame.display.update()
         

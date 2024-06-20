@@ -79,5 +79,7 @@ def mini_memory():
             if napsano=="150" and napsano2=="9":
                 return mini.win_minigame()
 
+        mini.mini_frame()
+
         pygame.display.update()
 

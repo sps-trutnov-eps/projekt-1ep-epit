@@ -24,6 +24,8 @@ def mini_prepis():
                 else :
                     napsano=napsano+str(udalost.unicode)
 
+        mini.mini_frame()
+
         text2=font.render(napsano, True, (0, 0, 0))
         mini.mini_surface.blit(text,(100,200))
         mini.mini_surface.blit(text2,(100,300))

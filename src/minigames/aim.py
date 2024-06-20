@@ -64,76 +64,76 @@ def mini_aim():
         
 
 
-        if tutorial == 1:
-            if udalost.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
+            if tutorial == 1:
+                if udalost.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                    
+                mini.mini_surface.fill((100,200,100))
+                draw_text(("AIM test"), text_font2, (155,0,100), 300, 0)
+                draw_text(("klikni na co nejvíc kruhů"), text_font2, (255,0,100), 0, 75)
+                draw_text(("naklikej 25 bodů"), text_font2, (255,0,100), 0, 150)
+                draw_text(("než dá timer 25sekund"), text_font2, (255,0,100), 0, 225)
+                draw_text(("hru zapneš kliknutím myši kamkoli"), text_font, (255,0,100), 0, 550)
                 
-            mini.mini_surface.fill((100,200,100))
-            draw_text(("AIM test"), text_font2, (155,0,100), 300, 0)
-            draw_text(("klikni na co nejvíc kruhů"), text_font2, (255,0,100), 0, 75)
-            draw_text(("naklikej 25 bodů"), text_font2, (255,0,100), 0, 150)
-            draw_text(("než dá timer 25sekund"), text_font2, (255,0,100), 0, 225)
-            draw_text(("hru zapneš kliknutím myši kamkoli"), text_font, (255,0,100), 0, 550)
-            
-            if udalost.type == pg.MOUSEBUTTONDOWN:
-                tutorial = 0
+                if udalost.type == pg.MOUSEBUTTONDOWN:
+                    tutorial = 0
+                    
                 
+                mini.mini_frame()
+                
+                pg.display.update()
+                
+            else:
             
-            mini.mini_frame()
-            
-            pg.display.update()
-            
-        else:
-        
-            pozice = pg.mouse.get_pos()
-            dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]-stred_y)**(2))
-            
+                pozice = pg.mouse.get_pos()
+                dotyk = math.sqrt((pozice[0]-stred_x)**(2)+(pozice[1]-stred_y)**(2))
+                
 
 
-            if dotyk <= 27 and udalost.type == pg.MOUSEBUTTONDOWN :
-                body += 1
-                bod_x = random.randrange(0, 800 - velikost_kruhu)
-                bod_y = random.randrange(0, 600 - velikost_kruhu)
-                stred_x = bod_x + velikost_kruhu/2
-                stred_y = bod_y + velikost_kruhu/2
-                fake_stred = bod_x + bod_y + velikost_kruhu
-                barva_kruhu1 = random.randrange(0, 255)
-                if barva_kruhu1 >= 190 and barva_kruhu1 <= 200:
-                    barva_kruhu1 += 10
-                barva_kruhu2 = random.randrange(0, 255)
-                if barva_kruhu2 >= 190 and barva_kruhu2 <= 200:
-                    barva_kruhu2 += 10
-                barva_kruhu3 = random.randrange(0, 255)
-                if barva_kruhu3 >= 190 and barva_kruhu3 <= 200:
-                        barva_kruhu3 += 10
-                barva_kruhu = (barva_kruhu1, barva_kruhu2, barva_kruhu3)
+                if dotyk <= 27 and udalost.type == pg.MOUSEBUTTONDOWN :
+                    body += 1
+                    bod_x = random.randrange(0, 800 - velikost_kruhu)
+                    bod_y = random.randrange(0, 600 - velikost_kruhu)
+                    stred_x = bod_x + velikost_kruhu/2
+                    stred_y = bod_y + velikost_kruhu/2
+                    fake_stred = bod_x + bod_y + velikost_kruhu
+                    barva_kruhu1 = random.randrange(0, 255)
+                    if barva_kruhu1 >= 190 and barva_kruhu1 <= 200:
+                        barva_kruhu1 += 10
+                    barva_kruhu2 = random.randrange(0, 255)
+                    if barva_kruhu2 >= 190 and barva_kruhu2 <= 200:
+                        barva_kruhu2 += 10
+                    barva_kruhu3 = random.randrange(0, 255)
+                    if barva_kruhu3 >= 190 and barva_kruhu3 <= 200:
+                            barva_kruhu3 += 10
+                    barva_kruhu = (barva_kruhu1, barva_kruhu2, barva_kruhu3)
+                    
+                
+                
                 
             
-            
-            
-        
-            
-            cas += 0.00076      
-            rncas = round(cas, 1)
-            
-            
-            if body == 25:
-                return mini.win_minigame()
                 
-            if rncas >= 25:
-                return mini.fail_minigame()
-            
-            
-            mini.mini_surface.fill((100,200,100))
-            mini.mini_surface.blit(bg_image, (0, 0))
-            
-            draw_text(str(body), text_font, (0,0,255), 355, 75)
-            draw_text(str(rncas), text_font, (255,0,0), 340, 125)
-            
-            
-            pg.draw.ellipse(mini.mini_surface, barva_kruhu, (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
-            
-            mini.mini_frame()
+                cas += 0.00076      
+                rncas = round(cas, 1)
                 
-            pg.display.update()
+                
+                if body == 25:
+                    return mini.win_minigame()
+                    
+                if rncas >= 25:
+                    return mini.fail_minigame()
+                
+                
+                mini.mini_surface.fill((100,200,100))
+                mini.mini_surface.blit(bg_image, (0, 0))
+                
+                draw_text(str(body), text_font, (0,0,255), 355, 75)
+                draw_text(str(rncas), text_font, (255,0,0), 340, 125)
+                
+                
+                pg.draw.ellipse(mini.mini_surface, barva_kruhu, (bod_x,bod_y,velikost_kruhu,velikost_kruhu) )
+                
+                mini.mini_frame()
+                    
+                pg.display.update()
