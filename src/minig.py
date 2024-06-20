@@ -2,10 +2,21 @@ import pygame
 import minigames.minigame_base as mini
 import minigames.test as mini_test
 import minigames.piano as piano
+import minigames.více_koleček as vice
+import minigames.clickni_na_kolečko as kol
+import minigames.multitasking as multi
+import minigames.přepis as prepis
+import minigames.zapamatuj_si_číslo as mem
+
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
     "piano": piano.piano,
+    "vice": vice.mini_vic_kolecek,
+    "kolecka": kol.mini_kolecko,
+    "multitasking": multi.mini_multi,
+    "prepis": prepis.mini_prepis,
+    "zapamatuj": mem.mini_memory,
 }
 
 def switch_to_minigame(name, sur: pygame.Surface):
