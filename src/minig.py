@@ -28,7 +28,7 @@ minigame_lib = {
     "zapamatuj": mem.mini_memory,
 }
 
-def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
+def switch_to_minigame(name: str, team: str, room: str, screen: pygame.Surface):
     # minigame setup
 
     mini.mini_surface = screen
