@@ -9,11 +9,19 @@ SCREEN_HEIGHT = 1080
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+rect_x = 1100
+rect_y = 2800
+rect_x2 = 1500
+rect_y2 = 2800
+rect_x3 = 1000
+rect_y3 = 3100
+rect_x4 = 900
+rect_y4 = 2750
 # player_number = 4
 # sem bychom jsme si mohli brat cislo hrace podle toho kolikaty se napoji do lobby
 # prozatim :
 player_number = rand.randint(1, 5)
- 
+
 # player team můžeme také brát z lobby
 player_team = 'it'
 
@@ -92,17 +100,47 @@ def is_collision(x, y, width, height, background):
                     return True
     return False
 
+def is_rect_collision(player, rect_x, rect_y, rect_width, rect_height):
+    player_rect = pg.Rect(player.x, player.y, player.width, player.height)
+    rect = pg.Rect(rect_x, rect_y, rect_width, rect_height)
+    return player_rect.colliderect(rect)
+
 def druhy_patro(screen: pg.Surface) -> None:
+    global obrazek_patra, player, rect_y, rect_x2, rect_x3, rect_y2, rect_y3
     clock = pg.time.Clock()
-    player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, player_team, player_number)
+    player = Player(SCREEN_WIDTH // 2 + 70, SCREEN_HEIGHT // 2, player_team, player_number)  
+    rect_width, rect_height = 100, 100
 
     while handle_events(player, obrazek_patra):
         bg_offset_x = SCREEN_WIDTH // 2 - player.x
         bg_offset_y = SCREEN_HEIGHT // 2 - player.y
 
         screen.fill(WHITE)
+
+        if obrazek_patra == p1:
+            pg.draw.rect(screen, BLACK, (rect_x + bg_offset_x, rect_y + bg_offset_y, rect_width, rect_height))
+            pg.draw.rect(screen, BLACK, (rect_x2 + bg_offset_x, rect_y2 + bg_offset_y, rect_width, rect_height))
+        elif obrazek_patra == p3:
+            pg.draw.rect(screen, BLACK, (rect_x3 + bg_offset_x, rect_y3 + bg_offset_y, rect_width, rect_height))
+        elif obrazek_patra == p2:
+            pg.draw.rect(screen, BLACK, (rect_x4 + bg_offset_x, rect_y4 + bg_offset_y, rect_width, rect_height))
+
         screen.blit(obrazek_patra, (bg_offset_x, bg_offset_y))
         player.display_player(screen, bg_offset_x, bg_offset_y)
+
+        if is_rect_collision(player, rect_x, rect_y, rect_width, rect_height):
+            obrazek_patra = p3
+            player = Player(1200, 3000, player_team, player_number)
+        elif is_rect_collision(player, rect_x3, rect_y3, rect_width, rect_height):
+            obrazek_patra = p1
+            player = Player(1100, 2550, player_team, player_number)
+        elif is_rect_collision(player, rect_x2, rect_y2, rect_width, rect_height):
+            obrazek_patra = p2
+            player = Player(850, 2300, player_team, player_number)
+        elif is_rect_collision(player, rect_x4, rect_y4, rect_width, rect_height):
+            obrazek_patra = p1
+            player = Player(1425, 2480, player_team, player_number)
+
         pg.display.update()
         clock.tick(60)
 
@@ -119,4 +157,3 @@ def main(scene_id: int = 0) -> None:
 
 if __name__ == '__main__':
     main()
-
