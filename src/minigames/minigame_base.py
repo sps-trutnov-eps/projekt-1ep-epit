@@ -24,8 +24,8 @@ def win_minigame():
 def mini_frame():
     netcode.client_sync()
     
-    # if game_ended:
-    #     raise MinigameInterupt
+    if not netcode.client_state.game_state == 1:
+        raise MinigameInterupt("game_ended")
 
 # pygame surface pro rendering
 mini_surface: pygame.Surface = None
