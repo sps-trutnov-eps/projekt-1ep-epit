@@ -2,10 +2,12 @@ import pygame
 import minigames.minigame_base as mini
 import minigames.test as mini_test
 import minigames.piano as piano
+import minigames.invaders as invaders
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
     "piano": piano.piano,
+    "invaders": invaders.mini_invaders,
 }
 
 def switch_to_minigame(name, sur: pygame.Surface):
