@@ -25,6 +25,7 @@ RED = (255, 0, 0)
 game_ready = False
 game_ongoing = False
 question_asked = False
+game_won = False  # Přidání proměnné pro sledování výhry
 
 # Definice seznamu otázek s možnostmi a správnými odpověďmi
 questions = [
@@ -188,6 +189,7 @@ def draw_question_screen(question_data):
 # Funkce pro vykreslení obrazovky se zpětnou vazbou
 def draw_feedback_screen(is_correct):
     global correct_answers_count
+    global game_won
     window.fill(WHITE)
     font = pygame.font.SysFont(None, 64)
     if is_correct:
@@ -200,8 +202,16 @@ def draw_feedback_screen(is_correct):
     pygame.display.flip()
     pygame.time.delay(2000)
     if correct_answers_count >= 10:
-        pygame.quit()
-        sys.exit()
+        game_won = True
+
+# Funkce pro vykreslení obrazovky s výhrou
+def draw_win_screen():
+    window.fill(WHITE)
+    font = pygame.font.SysFont(None, 64)
+    win_text = font.render("Výhra!", True, BLACK)
+    win_text_rect = win_text.get_rect(center=(screen_width // 2, screen_height // 2))
+    window.blit(win_text, win_text_rect)
+    pygame.display.flip()
 
 # Funkce pro vykreslení počítadla správných odpovědí
 def draw_counter():
@@ -226,21 +236,23 @@ while running:
                     if button_rect.collidepoint(event.pos):
                         game_ready = True
                         game_ongoing = True
-                elif game_ongoing:
+                elif game_ongoing and not game_won:
                     for rect, answer in option_rects:
                         if rect.collidepoint(event.pos):
                             is_correct = (answer == current_question["correct_answer"])
                             draw_feedback_screen(is_correct)
                             question_asked = False
 
-    if not game_ready:
+    if game_won:
+        draw_win_screen()
+    elif not game_ready:
         draw_start_screen()
     elif game_ongoing and not question_asked:
         current_question = random.choice(questions)
         option_rects = draw_question_screen(current_question)
         question_asked = True
 
-    if game_ongoing:
+    if game_ongoing and not game_won:
         draw_counter()
 
     pygame.display.flip()
