@@ -301,7 +301,7 @@ def disconnect_as_client():
 # == server state ==
 
 class ServerState:
-    __slots__ = ["lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players", "score_ep", "score_it", "land_ep", "land_it"]
+    __slots__ = ["lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players", "score", "land"]
 
     def __init__(self) -> None:
         # init the server infrastructure
@@ -318,10 +318,8 @@ class ServerState:
 
         self.player_info = {}
         self.game_state = 0
-        self.score_ep = 0
-        self.score_it = 0
-        self.land_ep = ["T10"]
-        self.land_it = ["T7"]
+        self.score = {"ep": 0, "it": 0}
+        self.land_ep = {"ep":["T10"], "it": ["T7"]}
 
     server: socketserver.ThreadingTCPServer
 
@@ -334,10 +332,8 @@ class ServerState:
     # in-game data (dict indexed by player_name containing [position, velocity]
     player_info: dict[str, list]
     game_state: int
-    score_ep: int
-    score_it: int
-    land_ep: list
-    land_it: list
+    score: dict[str, int]
+    land: dict[str, list]
 
 server_state: ServerState
 server_process: subprocess.Popen # only used when running internal server
@@ -552,18 +548,18 @@ def server_tickloop():
             # score packets
                 
             if packet[0] == "score_ep":
-                server_state.score_ep = packet[1]
+                server_state.score["ep"] = packet[1]
 
             elif packet[0] == "score_it":
-                server_state.score_it = packet[1]
+                server_state.score["it"] = packet[1]
 
             # land packets
                 
             elif packet[0] == "land_ep":
-                server_state.land_ep = packet[1]
+                server_state.land["ep"] = packet[1]
 
             elif packet[0] == "land_it":
-                server_state.land_it = packet[1]
+                server_state.land["it"] = packet[1]
 
         # == process and send game events ==
 
@@ -593,8 +589,8 @@ def server_tickloop():
 
         if server_state.game_state == 1:
             # game score
-            game_tick[2]["game_score_ep"] = (server_state.score_ep + len(server_state.land_ep))
-            game_tick[2]["game_score_it"] = (server_state.score_it + len(server_state.land_it))
+            game_tick[2]["game_score_ep"] = (server_state.score["ep"] + len(server_state.land["ep"]))
+            game_tick[2]["game_score_it"] = (server_state.score["it"] + len(server_state.land["ep"]))
 
         send_packets(active_client_socks, game_tick)
 
