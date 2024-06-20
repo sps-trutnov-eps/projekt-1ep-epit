@@ -319,7 +319,7 @@ class ServerState:
         self.player_info = {}
         self.game_state = 0
         self.score = {"ep": 0, "it": 0}
-        self.land_ep = {"ep":["T10"], "it": ["T7"]}
+        self.land = {"ep":["T10"], "it": ["T7"]}
 
     server: socketserver.ThreadingTCPServer
 
