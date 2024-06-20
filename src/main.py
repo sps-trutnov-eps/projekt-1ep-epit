@@ -460,7 +460,7 @@ def level(screen: pygame.Surface) -> int:
                 is_in_interact = True
 
                 if keys[pygame.K_e]:
-                    pass # minig.switch_to_minigame(random.choice(list(minig.minigame_lib.keys())), team, asdas, land, 123512621452153215, screen)
+                    pass # minig.switch_to_minigame(random.choice(list(minig.minigame_lib.keys())), team, room: str, screen)
 
         screen.fill(BLACK)
 

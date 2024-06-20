@@ -11,7 +11,7 @@ minigame_lib = {
     "podvadeni": mini_podvadeni.podvadeni
 }
 
-def switch_to_minigame(name: str, team, room, screen: pygame.Surface):
+def switch_to_minigame(name: str, team: str, room: str, screen: pygame.Surface):
     # minigame setup
 
     mini.mini_surface = screen
