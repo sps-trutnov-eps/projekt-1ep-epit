@@ -548,18 +548,18 @@ def server_tickloop():
             # score packets
                 
             if packet[0] == "score_ep":
-                server_state.score["ep"] = packet[1]
+                server_state.score["ep"] += packet[1]
 
             elif packet[0] == "score_it":
-                server_state.score["it"] = packet[1]
+                server_state.score["it"] += packet[1]
 
             # land packets
                 
             elif packet[0] == "land_ep":
-                server_state.land["ep"] = packet[1]
+                server_state.land["ep"].append(packet[1])
 
             elif packet[0] == "land_it":
-                server_state.land["it"] = packet[1]
+                server_state.land["it"].append(packet[1])
 
         # == process and send game events ==
 
