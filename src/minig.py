@@ -15,7 +15,6 @@ import minigames.zapamatuj_si_číslo as mem
 
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
-    "test": mini_test.test_minigame,
     "piano": piano.piano,
     "podvadeni": mini_podvadeni.podvadeni,
     "invaders": invaders.mini_invaders,

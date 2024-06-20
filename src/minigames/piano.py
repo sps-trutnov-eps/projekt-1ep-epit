@@ -51,9 +51,7 @@ def piano(screen: pygame.Surface):
         if timer==0:
             barva=(255,0,0)
         if score>10 and vyhra==0:
-            vyhra=1
-            #výhra
-            print("výhra")
+            return mini.win_minigame()
         pygame.draw.rect(screen,barva, (0, rozliseni_okna[1]-100, rozliseni_okna[0],100))
         pygame.draw.rect(screen, (0, 0, 0), (ctverec_x, ctverec_y, 100, 100))
         screen.blit(text1, (415, rozliseni_okna[1]-100))

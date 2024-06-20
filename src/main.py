@@ -483,9 +483,10 @@ def level(screen: pygame.Surface) -> int:
             dist_squared = (player_state[0][0] - inter[2][0]) ** 2 + (player_state[0][1] - inter[2][1]) ** 2
             if dist_squared < inter[1] ** 2:
                 is_in_interact = True
-
+                
+                room = None # TODO
                 if keys[pygame.K_e]:
-                    pass # minig.switch_to_minigame(random.choice(list(minig.minigame_lib.keys())), team, room: str, screen)
+                    minig.switch_to_minigame(random.choice(list(minig.minigame_lib.keys())), team, room, screen)
 
         screen.fill(BLACK)
 
