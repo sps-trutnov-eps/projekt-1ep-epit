@@ -206,9 +206,18 @@ def lobby(screen: pygame.Surface) -> int:
     light_brown = (205, 133, 63)
     blue = (0, 0, 255)
     dark_gray = (50, 50, 50)
+    green = (0, 255, 0)
 
-    center = (400, 300)
+    center = (640, 480)
     square_size = 550
+    
+    
+    def is_click_on_ui(button_rect, event):
+        return button_rect.collidepoint(event.pos)
+    
+    def start_game():
+            netcode.start_game()
+
     
     def draw_table_and_chairs(surface, table_color, chair_color, table_rect, chair_size, gap):
         pygame.draw.rect(surface, table_color, table_rect)
@@ -246,8 +255,8 @@ def lobby(screen: pygame.Surface) -> int:
         if not lobby_info == None:
             sel_team = lobby_info[session_info[1]][0]
 
-        host_start_button = (0, 0, 200, 50)
-        team_button = (300, 150, 200, 50)
+        host_start_button = (250, 400, 100, 40)
+        team_button = (150, 450, 200, 50)
 
         colliders = [
             (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, square_size + 100, 50),
@@ -262,7 +271,7 @@ def lobby(screen: pygame.Surface) -> int:
                 exit(0)
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if common.is_click_on_ui(host_start_button, event):
+                if common.is_click_on_ui(host_start_button, event) and netcode.client_state.is_host:
                     netcode.start_game()
                 if common.is_click_on_ui(team_button, event):
                     sel_team = "ep" if sel_team == "it" else "it"
@@ -316,6 +325,19 @@ def lobby(screen: pygame.Surface) -> int:
             
         draw_teacher_table_and_chair(screen, black, light_brown, teacher_table_rect, teacher_chair_rect)
         colliders.append(teacher_chair_rect)
+        
+        if netcode.client_state.is_host:
+            #host_start_button = (door_x + 25, door_y)
+            pygame.draw.rect(screen, green, host_start_button)
+            font = pygame.font.Font(None, 36)
+            text = font.render("Start", True, black)
+            text_rect = text.get_rect(center=pygame.Rect(host_start_button).center)
+            screen.blit(text, text_rect)
+        pygame.draw.rect(screen, blue, team_button)
+        font = pygame.font.Font(None, 36)
+        text = font.render("Change team", True, black)
+        text_rect = text.get_rect(center=pygame.Rect(team_button).center)
+        screen.blit(text, text_rect)
 
         #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
         
