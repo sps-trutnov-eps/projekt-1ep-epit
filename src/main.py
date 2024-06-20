@@ -460,7 +460,7 @@ def level(screen: pygame.Surface) -> int:
     team = lobby_info[session_info[1]][0]
 
     cam = Camera2D()
-    player_state = [map_data["map_spawnpoints"][team], (0, 0)]
+    player_state = [map_data["map_spawnpoints"][team], [0, 0]]
 
     while handle_events():
         netcode.client_sync()
