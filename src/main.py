@@ -208,7 +208,7 @@ def lobby(screen: pygame.Surface) -> int:
     dark_gray = (50, 50, 50)
     green = (0, 255, 0)
 
-    center = (400, 300)
+    center = (640, 480)
     square_size = 550
     
     
@@ -255,8 +255,8 @@ def lobby(screen: pygame.Surface) -> int:
         if not lobby_info == None:
             sel_team = lobby_info[session_info[1]][0]
 
-        host_start_button = (10, 300, 100, 40)
-        team_button = (300, 150, 200, 50)
+        host_start_button = (250, 400, 100, 40)
+        team_button = (150, 450, 200, 50)
 
         colliders = [
             (center[0] - square_size // 2 - 50, center[1] - square_size // 2 - 50, square_size + 100, 50),
@@ -327,10 +327,16 @@ def lobby(screen: pygame.Surface) -> int:
         colliders.append(teacher_chair_rect)
         
         #host_start_button = (door_x + 25, door_y)
-        pg.draw.rect(screen, green, host_start_button)
-        font = pg.font.Font(None, 36)
+        pygame.draw.rect(screen, green, host_start_button)
+        font = pygame.font.Font(None, 36)
         text = font.render("Start", True, black)
-        text_rect = text.get_rect(center=pg.Rect(host_start_button).center)
+        text_rect = text.get_rect(center=pygame.Rect(host_start_button).center)
+        screen.blit(text, text_rect)
+        
+        pygame.draw.rect(screen, blue, team_button)
+        font = pygame.font.Font(None, 36)
+        text = font.render("Change team", True, black)
+        text_rect = text.get_rect(center=pygame.Rect(team_button).center)
         screen.blit(text, text_rect)
 
         #pygame.draw.rect(screen, blue, (player_x, player_y, player_width, player_height))
