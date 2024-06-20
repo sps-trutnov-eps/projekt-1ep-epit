@@ -1,11 +1,14 @@
 import time
-import minig
 import netcode
 import common
 import pygame
 import json
 import random
 from pygame import K_ESCAPE, KEYDOWN, QUIT
+
+pygame.init()
+
+import minig
 
 SCREEN_RESOLUTION = (1280, 960)
 WHITE = (255, 255, 255)

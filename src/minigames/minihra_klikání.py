@@ -2,18 +2,7 @@ import sys
 import pygame
 import minigames.minigame_base as mini
 
-bg_image = pygame.image.load('../../assets/aim_klik/Pozadí.v2 klikání.png')
-nahoru = 0
-postup = mini.mini_surface.get_width()/2
-clicks = 0
-cas = 0.1111111111
-cps = 1
-cps2 = 1
-IT = 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-tutorial = 1
-hra = 0
-konec = 0
-
+bg_image = pygame.image.load('../assets/aim_klik/Pozadí.v2 klikání.png')
 
 text_font = pygame.font.SysFont('Arial black', 47)
 text_font2 = pygame.font.SysFont('Arial black', 20)
@@ -24,6 +13,17 @@ def draw_text(text, font, text_col, x, y):
     mini.mini_surface.blit(img, (x, y))
 
 def mini_klik():
+    nahoru = 0
+    postup = mini.mini_surface.get_width()/2
+    clicks = 0
+    cas = 0.1111111111
+    cps = 1
+    cps2 = 1
+    IT = 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    tutorial = 1
+    hra = 0
+    konec = 0
+
     while True:
         for udalost in pygame.event.get():
             if udalost.type == pygame.QUIT:

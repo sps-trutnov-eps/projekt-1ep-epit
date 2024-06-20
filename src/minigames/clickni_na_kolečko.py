@@ -1,11 +1,11 @@
 import sys
 import random
 import pygame
-import minigame_base as mini
-
-rozliseni_okna = mini.mini_surface.get_size()
+import minigames.minigame_base as mini
 
 def mini_kolecko():
+    rozliseni_okna = mini.mini_surface.get_size()
+
     misto_x=0
     misto_y=0
     body=0

@@ -1,11 +1,11 @@
 import sys
 import random
 import pygame
-import minigame_base as mini
-
-rozliseni_okna = mini.mini_surface.get_size()
+import minigames.minigame_base as mini
 
 def mini_prepis():
+    rozliseni_okna = mini.mini_surface.get_size()
+
     slova=("slovo a další a ještě jedno", "nic","něco jsem napsal")
     vybrane=random.randint(0,len(slova)-1)
     napsano=""

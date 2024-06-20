@@ -1,7 +1,7 @@
 import sys
 import random
 import pygame
-import minigame_base as mini
+import minigames.minigame_base as mini
 
 def mini_vic_kolecek():
     score=0

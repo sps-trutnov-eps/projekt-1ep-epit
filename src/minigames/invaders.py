@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 import os
-import minigame_base as minigame
+import minigames.minigame_base as minigame
 
 # pygame.init()
 
@@ -24,7 +24,7 @@ def load_image(image_path, scale=(64, 64)):
         print(f"Obrázek {image_path} se nepodařilo načíst: {e}")
         exit()
 
-asset_dir = os.path.dirname(os.path.abspath(__file__) + "../../assets/invaders")
+asset_dir = os.path.dirname(os.path.abspath(__file__))  + "/../../assets/invaders"
 
 player_img = load_image(os.path.join(asset_dir, 'player.png'), scale=(128, 128))
 enemy_img = load_image(os.path.join(asset_dir, 'enemy.png'), scale=(96, 96))

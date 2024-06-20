@@ -2,7 +2,7 @@ import pygame as pg
 import sys
 import math
 import random
-import minigame_base as mini
+import minigames.minigame_base as mini
 
 #pg.init()
 #okno = pg.display.set_mode([800, 600])
@@ -35,7 +35,7 @@ def draw_text(text, font, text_col, x, y):
     mini.mini_surface.blit(img, (x, y))
 
 def mini_aim():
-    bg_image = pg.image.load('../../assets/aim_klik/Pozadí Aim minigame.png')
+    bg_image = pg.image.load('../assets/aim_klik/Pozadí Aim minigame.png')
 
     pozice = (1,1)
     bod_x = 359

@@ -1,11 +1,11 @@
 import sys
 import random
 import pygame
-import minigame_base as mini
-
-rozliseni_okna = mini.mini_surface.get_size()
+import minigames.minigame_base as mini
 
 def mini_memory():
+    rozliseni_okna = mini.mini_surface.get_size()
+
     napsano=""
     napsano2=""
     vybrane=random.randint(1,4)
