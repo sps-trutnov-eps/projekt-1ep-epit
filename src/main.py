@@ -270,7 +270,7 @@ def lobby(screen: pygame.Surface) -> int:
                 (event.type == KEYDOWN and event.key == K_ESCAPE)):
                 exit(0)
             
-            elif event.type == pg.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if common.is_click_on_ui(host_start_button, event) and netcode.client_state.is_host:
                     netcode.start_game()
                 if common.is_click_on_ui(team_button, event):
@@ -328,10 +328,10 @@ def lobby(screen: pygame.Surface) -> int:
         
         if netcode.client_state.is_host:
             #host_start_button = (door_x + 25, door_y)
-            pg.draw.rect(screen, green, host_start_button)
-            font = pg.font.Font(None, 36)
+            pygame.draw.rect(screen, green, host_start_button)
+            font = pygame.font.Font(None, 36)
             text = font.render("Start", True, black)
-            text_rect = text.get_rect(center=pg.Rect(host_start_button).center)
+            text_rect = text.get_rect(center=pygame.Rect(host_start_button).center)
             screen.blit(text, text_rect)
         pygame.draw.rect(screen, blue, team_button)
         font = pygame.font.Font(None, 36)
