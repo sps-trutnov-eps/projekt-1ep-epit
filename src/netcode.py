@@ -454,6 +454,9 @@ def server_tickloop():
 
         # FIXME: this while true needs proper rewrite, cause of most server freezes when under load (and server no keeping up)
         while True:
+            if len(active_client_socks) == 0:
+                break
+
             awaiting_socks, _, _ = select.select(active_client_socks, [], [], 0)
 
             if len(awaiting_socks) == 0: # all packets read, break to tick
