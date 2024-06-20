@@ -4,11 +4,13 @@ import minigames.minigame_base as mini
 import minigames.test as mini_test
 import minigames.piano as piano
 import minigames.podvadeni as mini_podvadeni
+import minigames.invaders as invaders
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
     "test": mini_test.test_minigame,
     "piano": piano.piano,
-    "podvadeni": mini_podvadeni.podvadeni
+    "podvadeni": mini_podvadeni.podvadeni,
+    "invaders": invaders.mini_invaders,
 }
 
 def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
@@ -19,7 +21,13 @@ def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.S
 
     # run minigame
 
-    result = mini_loop(screen)
+    try:
+        result = mini_loop()
+    except mini.MinigameInterupt as e:
+        if e.reason == "game_ended":
+            return
+
+        result = None
 
     # check result
 
@@ -29,8 +37,8 @@ def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.S
         return None
 
     elif result.did_win == False: # win
-        netcode.send_packet(client_state.server_conn, (str("score_" + team), int(score + (len(land) * 100)), player_name, protocol_version))
-        netcode.send_packet(client_state.server_conn, (str("land_" + team), land.append(room), player_name, protocol_version))
+        netcode.send_packet(netcode.client_state.server_conn, (str("score_" + team), int(score + (len(land) * 100))))
+        netcode.send_packet(netcode.client_state.server_conn, (str("land_" + team), land.append(room)))
 
     elif result.did_win == True: # fail
         return None
