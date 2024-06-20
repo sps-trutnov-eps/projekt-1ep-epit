@@ -8,15 +8,21 @@ import json
 import threading
 import subprocess
 import hashlib
+import traceback
+import zlib
 import os
 
 import time
 from typing import Callable
+import random
+
+# TO ALL WHO DARE: do NOT import pygame in this file, it will cause a hang witch requires a trip to the task manager to solve
 
 # == EPIT server/client backend netcode ==
 
-protocol_version = 13
-packet_len_bytes = 2
+protocol_version = 17
+packet_len_bytes = 4
+target_ticktime = (1 / 20) # ideal ~20 TPS target
 
 # == client state ==
 
@@ -53,7 +59,6 @@ class ClientState:
     player_name: str
     game_state: int # 0 = in lobby, 1 = in game
 
-    # list of teams which is a list of players which is a (p_name, p_color, p_model)
     on_lobby_info: Callable
     on_game_result: Callable
 
@@ -68,10 +73,25 @@ client_state: ClientState
 # == client implementation ==
 
 def send_packet(sock: socket.socket, obj):
-    packet_data: bytes = bytes(json.dumps(obj), 'utf-8')
-    packet_len: int = len(packet_data)
+    try:
+        packet_data: bytes = zlib.compress(bytes(json.dumps(obj), 'utf-8'), 4)
+        packet_len: int = len(packet_data)
+        
+        sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+    except:
+        pass
 
-    sock.sendall(packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data)
+# note: only really used for server sends
+def send_packets(socks: list[socket.socket], obj):
+    try:
+        packet_data: bytes = zlib.compress(bytes(json.dumps(obj), 'utf-8'), 4)
+        packet_len: int = len(packet_data)
+
+        packet_fin: bytes = packet_len.to_bytes(packet_len_bytes, "big", signed=False) + packet_data
+        for sock in socks:
+            sock.sendall(packet_fin)
+    except:
+        pass
 
 def read_packet(sock: socket.socket) -> list:
     # read packet size header
@@ -83,18 +103,22 @@ def read_packet(sock: socket.socket) -> list:
     # parse packet header
     msg_len = int.from_bytes(msg_len, "big", signed=False)
 
-    message = ''
-    len_read = 0
+    message = b''
 
-    while len_read < msg_len:
-        message = sock.recv(min(msg_len, 4096))
+    while msg_len:
+        fragment = sock.recv(min(msg_len, 4096))
 
-        if not message:
+        if not fragment:
             raise ConnectionError
 
-        len_read += len(message)
-
-    return json.loads(message) 
+        msg_len = max(0, msg_len - len(fragment))
+        message += fragment
+    
+    try:
+        return json.loads(zlib.decompress(message)) 
+    except:
+        print(message)
+        raise
 
 # called once per client frame to sync with server
 def client_sync(watch_for_lock_response: bool = False) -> bool | None:
@@ -132,18 +156,21 @@ def client_sync(watch_for_lock_response: bool = False) -> bool | None:
             event_type = packet[1]
 
             # lobby events
-            if event_type == "game_start":
-                # game started, load main map
+            if event_type == "game_state_change":
+                if client_state.game_state == packet[2]:
+                    continue
 
-                client_state.game_state = 1
-                print("client: game start")
-            
-            elif event_type == "game_end":
-                # game ended, load lobby and display results
+                client_state.game_state = packet[2]
+                if client_state.game_state == 0:
+                    # game ended, load lobby and display results
 
-                client_state.game_state = 0
-                client_state.on_game_result(packet[2])
-                print("client: game end")
+                    # client_state.on_game_result(packet[2]) TODO: results from lobby game tick
+                    print("client: game end")
+
+                elif client_state.game_state == 1:
+                    # game started, load main map
+
+                    print("client: game start")
 
             elif event_type == "lobby_update":
                 # the lobby data has changed (client connects/disconnects, team/skin changes)
@@ -203,11 +230,11 @@ def start_game():
     
     send_packet(client_state.server_conn, ("c_host_game_start",))
 
-def change_team(index: int):
+def change_team(team: str):
     if not client_state.game_state == 0:
         raise ValueError("player can only change teams if in lobby, not in game!") # can be changed if we allow changing teams while in-game
 
-    send_packet(client_state.server_conn, ("c_change_team", index))
+    send_packet(client_state.server_conn, ("c_change_team", team))
 
 def update_player_info(pos: list[float], vel: list[float]):
     send_packet(client_state.server_conn, ("c_player_info", pos, vel))
@@ -215,7 +242,7 @@ def update_player_info(pos: list[float], vel: list[float]):
 # note: called only by the server!!!
 def game_end():
     server_state.game_state = 0
-    
+
     print("server: ending game...")
 
 def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks: tuple) -> tuple[bool, str | None]:
@@ -247,8 +274,8 @@ def connect_as_client(uri: tuple, player_name: str, is_host: bool, client_hooks:
             if response[0] == "s_init_name_taken":
                 return (False, "Player name is already taken.")
 
-            elif response[0] == "s_init_match_running":
-                return (False, "Match has already started, wait for it to end.")
+            elif response[0] == "s_init_ingame":
+                return (False, "Game has already started, wait for it to end.")
 
             elif response[0] == "s_unexpected_packet":
                 return (False, "Internal communication error... (spam the devs to punish them)")
@@ -274,15 +301,10 @@ def disconnect_as_client():
 # == server state ==
 
 class ServerState:
-    __slots__ = ["server_thread", "server_tick_thread", "server", "lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players"]
+    __slots__ = ["lobby", "remote_locks", "player_info", "is_shuting_down", "game_state", "host_players", "score_ep", "score_it", "land_ep", "land_it"]
 
     def __init__(self) -> None:
         # init the server infrastructure
-        
-        self.server = socketserver.ThreadingTCPServer(('', 15533), ServerClientConnectionHandler)
-        self.server.daemon_threads = True
-
-        # note: tick thread is setup on host_game_start
 
         self.remote_locks = {}
 
@@ -296,22 +318,26 @@ class ServerState:
 
         self.player_info = {}
         self.game_state = 0
-
-    # used to detect lobby changes between clients
-    def hash_lobby(self) -> bytes:
-        return hashlib.sha1(json.dumps(self.lobby).encode('utf-8'), usedforsecurity=False).digest()
+        self.score_ep = 0
+        self.score_it = 0
+        self.land_ep = ["T10"]
+        self.land_it = ["T7"]
 
     server: socketserver.ThreadingTCPServer
 
     remote_locks: dict[str, threading.Lock]
     
-    # lobby data (dict indexed by player_name containing [team_index])
-    lobby_players: dict[str, list[int]]
+    # lobby data (dict indexed by player_name containing [team_name, skin_index])
+    lobby_players: dict[str, tuple[str, int]]
     host_players: set[str]
 
     # in-game data (dict indexed by player_name containing [position, velocity]
     player_info: dict[str, list]
     game_state: int
+    score_ep: int
+    score_it: int
+    land_ep: list
+    land_it: list
 
 server_state: ServerState
 server_process: subprocess.Popen # only used when running internal server
@@ -350,173 +376,245 @@ def server_handle_connect(req: socket.socket) -> list | None:
         send_packet(req, ("s_init_name_taken",))
         return
 
+    elif not server_state.game_state == 0:
+        print("server: refused new connection due to not being in lobby!")
+
+        send_packet(req, ("s_init_ingame",))
+        return
+
     return init_packet
 
-class ServerClientConnectionHandler(socketserver.BaseRequestHandler):
-    # started for every connected client to the server, handles all transport level io for that client
-    def handle(self):
-        # new client connected, await clients "init" message
+# single-threaded server, keeps track of all clients assigned to it
+# maybe-TODO: might rewrite with python selector module, not sure if worth it
+def server_tickloop():
+    # server sockets
+    server_sock = socket.create_server(('', 15533), backlog=8)
+    active_client_socks = []
+    client_player_names = {}
 
-        init_packet = server_handle_connect(self.request)
+    # client data versioning
+    #   the server keeps track of which clients have outdated data by swaping them between "fresh/outdated" lists
+    #   clients will be sent s_game_event packets with refreshed data on the next available tick
 
-        if init_packet == None:
-            return # failed to init with client
+    lobby_fresh_clients = []
+    lobby_outdated_clients = []
 
-        # init client handler
+    def invalidate_lobby():
+        lobby_outdated_clients.extend(lobby_fresh_clients)
+        lobby_fresh_clients.clear()
 
-        player_name = init_packet[1]
-        server_state.lobby[player_name] = [0]
-        
-        client_lobby_hash = server_state.hash_lobby()
-        client_game_state = server_state.game_state
+    game_state_fresh_clients = []
+    game_state_outdated_clients = []
 
-        if init_packet[3]:
-            server_state.host_players.add(player_name)
+    def invalidate_game_state():
+        game_state_outdated_clients.extend(game_state_fresh_clients)
+        game_state_fresh_clients.clear()
 
-        send_packet(self.request, ("s_init_success", server_state.lobby, client_game_state, player_name in server_state.host_players))
+    t_perf = 0
+    perf_tps = 0
+    perf_util = 0
 
-        print(f"server: client {player_name} connected!")
+    while True:
+        t = time.time()
 
-        target_ticktime = (1 / 20) # ideal ~20 TPS target
+        # == check for new clients ==
 
-        # client io loop
-        while True:
-            # update client handler
+        awaiting_socks, _, _ = select.select([server_sock], [], [], 0)
+        for sock in awaiting_socks:
+            c_sock, addr = sock.accept()
+            init_packet = server_handle_connect(c_sock)
 
-            t = time.time()
+            if init_packet == None: # failed to init with client
+                c_sock.close()
+                continue
 
-            if len(server_state.host_players) == 0: # always at least one person must be a "host" player
+            # init client handler
+
+            active_client_socks.append(c_sock)
+
+            player_name = init_packet[1]
+            client_player_names[c_sock] = player_name
+
+            server_state.lobby[player_name] = ["it", random.randint(1, 5)]
+            invalidate_lobby()
+
+            lobby_fresh_clients.append(c_sock)
+            game_state_fresh_clients.append(c_sock)
+
+            if init_packet[3]:
                 server_state.host_players.add(player_name)
 
-                # inform client that it has become host
-                send_packet(self.request, ("s_game_event", "client_update", True))
+            send_packet(c_sock, ("s_init_success", server_state.lobby, server_state.game_state, player_name in server_state.host_players))
 
-            # check for received client packets
-            try:
-                packets = []
+            print(f"server: client {player_name} connected!")
 
-                while True:
-                    read_sockets, _, _ = select.select((self.request,), tuple(), tuple(), 0)
+        # == check for client packets ==
 
-                    if len(read_sockets) == 0:
-                        break
+        client_packets = []
 
-                    if len(packets) > 32: # check to avoid infinitely reading client packets without processing them, backlog reached at this point, server surenders and can't keep up, things WILL get out of sync
-                        print(f"server: can't keep up! over 32 packets in a single tick from client \"{player_name}\"!")
-                        break
+        # FIXME: this while true needs proper rewrite, cause of most server freezes when under load (and server no keeping up)
+        while True:
+            if len(active_client_socks) == 0:
+                break
 
-                    for sock in read_sockets:
-                        # receive and parse packets from tcp stream
+            awaiting_socks, _, _ = select.select(active_client_socks, [], [], 0)
 
-                        p = read_packet(sock)
+            if len(awaiting_socks) == 0: # all packets read, break to tick
+                break
 
-                        if len(packets) > 16: # danger of packet backlog, start ignoring noisy update packets (will cause visual lags of this client for others)
-                            if p[0] == "c_player_info" or p[0] == "ping":
-                                continue
+            if len(client_packets) > len(active_client_socks) * 256: # break when can't keep up reading new packets to avoid deadlock
+                print("server: can't keep up! recieved more than 256 packets per client on avg!")
+                break
 
-                        packets.append(p)
+            for sock in awaiting_socks:
+                # read bytestream and parse a packet from sock
 
-                # == process client packets ==
-
-                for packet in packets:
-                    if packet[0] == "c_lock_acquire":
-                        lock = server_state.remote_locks.get(packet[1])
-
-                        if lock == None:
-                            # create new lock
-
-                            lock = threading.Lock()
-                            server_state.remote_locks[packet[1]] = lock
-
-                        did_acquire = lock.acquire(False)
-
-                        send_packet(self.request, ("s_lock_response", did_acquire))
-                    
-                    elif packet[0] == "c_lock_release":
-                        server_state.remote_locks[packet[1]].release()
-
-                    # player packets
-
-                    elif packet[0] == "c_player_info":
-                        server_state.player_info[player_name] = [packet[1], packet[2]]
-
-                    # host packets
-
-                    elif packet[0] == "c_host_game_start":
-                        if not player_name in server_state.host_players:
-                            continue # player is not host
-
-                        if not server_state.game_state == 0:
-                            continue
-
-                        server_state.game_state = 1
-
-                    elif packet[0] == "c_host_server_quit":
-                        if not player_name in server_state.host_players:
-                            continue # player is not host
-
-                        server_state.is_shuting_down = True
-                        
-                        send_packet(self.request, ("server_quit",))
-                        return
-
-                    # lobby packets
-
-                    elif packet[0] == "c_change_team":
-                        server_state.lobby[player_name][0] = packet[1]
-
-                    elif packet[0] == "ping":
-                        send_packet(self.request, ("pong",*packet))
-                    
-                    else:
-                        send_packet(self.request, ("s_unexpected_packet",))
-
-            except ConnectionError:
-                server_handle_disconnect(player_name)
-                return
-            
-            # == send server packets to client ==
-
-            game_tick = ("s_game_tick", {}, {})
-
-            # player updates (position, held item, etc.)
-
-            for name, p in server_state.player_info.items():
-                game_tick[1][name] = (p[0], p[1])
+                try:
+                    client_packets.append((read_packet(sock), sock, client_player_names[sock]))
                 
-            if server_state.game_state == 1:
-                # game score
+                except ConnectionError: # graceful dc
+                    server_handle_disconnect(client_player_names[sock])
+                    invalidate_lobby()
+                    client_player_names.pop(sock)
+                    active_client_socks.remove(sock)
+                except: # abnormal dc, print trace
+                    server_handle_disconnect(client_player_names[sock])
+                    invalidate_lobby()
 
-                game_tick[2]["game_score"] = () # TODO: Pavel, send to clients what you want
-            else:
-                game_tick[2]["game_score"] = None # no score updates when in lobby
+                    print("handling of player", client_player_names[sock], "crashed!")
+                    print("----------------------------------")
+                    print(traceback.format_exc(), end="")
+                    print("----------------------------------")
 
-            send_packet(self.request, game_tick)
+                    client_player_names.pop(sock)
+                    active_client_socks.remove(sock)
+            
+        # == process client packets ==
 
-            # check for changed synced data
+        for packet, client_sock, player_name in client_packets:
+            if not client_sock in active_client_socks:
+                continue # ignore packets from a disconeccted client
 
-            if server_state.is_shuting_down:
-                send_packet(self.request, ("s_server_quit",))
+            if packet[0] == "c_lock_acquire":
+                lock = server_state.remote_locks.get(packet[1])
+
+                if lock == None:
+                    # create new lock
+
+                    lock = threading.Lock()
+                    server_state.remote_locks[packet[1]] = lock
+
+                did_acquire = lock.acquire(False)
+
+                send_packet(client_sock, ("s_lock_response", did_acquire))
+                    
+            elif packet[0] == "c_lock_release":
+                server_state.remote_locks[packet[1]].release()
+
+            # player packets
+
+            elif packet[0] == "c_player_info":
+                server_state.player_info[player_name] = [packet[1], packet[2]]
+
+            # host packets
+
+            elif packet[0] == "c_host_game_start":
+                if not player_name in server_state.host_players:
+                    continue # player is not host
+
+                if not server_state.game_state == 0:
+                    continue
+
+                server_state.game_state = 1
+                invalidate_game_state()
+
+            elif packet[0] == "c_host_server_quit":
+                if not player_name in server_state.host_players:
+                    continue # player is not host
+
+                server_state.is_shuting_down = True
+                
+                send_packet(client_sock, ("server_quit",))
                 return
 
-            if not client_game_state == server_state.game_state:
-                client_game_state = server_state.game_state
+            # lobby packets
 
-                if client_game_state == 0: # return to lobby (game end)
-                    send_packet(self.request, ("s_game_event", "game_end", None))
-                elif client_game_state == 1: # switch to game (game start)
-                    send_packet(self.request, ("s_game_event", "game_start"))
+            elif packet[0] == "c_change_team":
+                server_state.lobby[player_name][0] = packet[1]
+                invalidate_lobby()
 
-            lob_hash = server_state.hash_lobby()
-            if not client_lobby_hash == lob_hash:
-                client_lobby_hash = lob_hash
+            elif packet[0] == "ping":
+                send_packet(client_sock, ("pong",*packet))
+                
+            else:
+                send_packet(client_sock, ("s_unexpected_packet",))
 
-                send_packet(self.request, ("s_game_event", "lobby_update", server_state.lobby))
+            # score packets
+                
+            if packet[0] == "score_ep":
+                server_state.score_ep = packet[1]
 
-            delta_time = time.time() - t
+            elif packet[0] == "score_it":
+                server_state.score_it = packet[1]
 
-            # throttle io loop if server is too fast
-            time.sleep(max(0, target_ticktime - delta_time))
+            # land packets
+                
+            elif packet[0] == "land_ep":
+                server_state.land_ep = packet[1]
+
+            elif packet[0] == "land_it":
+                server_state.land_it = packet[1]
+
+        # == process and send game events ==
+
+        if server_state.is_shuting_down:
+            send_packets(active_client_socks, ("s_server_quit",))
+
+        if len(server_state.host_players) == 0 and not len(active_client_socks) == 0: # always at least one person must be a "host" player
+            new_host = active_client_socks[0]
+            server_state.host_players.add(client_player_names[new_host])
+            
+            send_packet(new_host, ("s_game_event", "client_update", True))
+
+        send_packets(lobby_outdated_clients, ("s_game_event", "lobby_update", server_state.lobby))
+        lobby_fresh_clients += lobby_outdated_clients
+        lobby_outdated_clients.clear()
+
+        send_packets(game_state_outdated_clients, ("s_game_event", "game_state_change", server_state.game_state))
+        lobby_fresh_clients += game_state_outdated_clients
+        game_state_outdated_clients.clear()
+
+        # == process and send game tick ==
+
+        game_tick = ("s_game_tick", {}, {})
+
+        for name, p in server_state.player_info.items():
+            game_tick[1][name] = (p[0], p[1])
+
+        if server_state.game_state == 1:
+            # game score
+            game_tick[2]["game_score_ep"] = (server_state.score_ep + len(server_state.land_ep))
+            game_tick[2]["game_score_it"] = (server_state.score_it + len(server_state.land_it))
+
+        send_packets(active_client_socks, game_tick)
+
+        # == server tickloop timing ==
+
+        delta_time = time.time() - t
+
+        # throttle io loop if server is too fast
+        time.sleep(max(0, target_ticktime - delta_time))
+
+        t_perf += 1
+        perf_tps += 1 / (time.time() - t)
+        perf_util += delta_time / target_ticktime
+
+        if t_perf > 40:
+            print(f"server: avg_tps: {round(perf_tps / t_perf, 2)} avg_util: {round((perf_util / t_perf) * 100, 2)}%")
+            t_perf = 0
+            perf_tps = 0
+            perf_util = 0
+            
 
 # starts the server python thread in the backgound
 def start_server():
@@ -530,7 +628,7 @@ def start_server():
     print(f"\nstarting EPIT dedicated server... (protocol version {protocol_version})\n")
 
     try:
-        server_state.server.serve_forever()
+        server_tickloop()
     except KeyboardInterrupt:
         exit(0)
 
@@ -540,7 +638,7 @@ def terminate_server():
 
     print("server: waiting for server to terminate...")
 
-    server_state.server.shutdown()
+    server_state.is_shuting_down = True
 
 # == netcode api ==
 
@@ -584,13 +682,3 @@ def quit_netcode():
 if __name__ == '__main__':
     atexit.register(terminate_server)
     start_server()
-
-    try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        pass
-    
-    print("exit")
-
-    exit(0)

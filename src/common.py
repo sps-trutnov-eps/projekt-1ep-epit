@@ -26,8 +26,8 @@ def is_click_on_ui(ui_rect: pygame.Rect, event: pygame.event.Event) -> bool:
 def center_in_rect(ui_rect: pygame.Rect, text_rect: pygame.Rect = (0, 0, 0, 0)) -> tuple:
     return (ui_rect[0] + ui_rect[2] // 2 - text_rect[2] // 2, ui_rect[1] + ui_rect[3] // 2 - text_rect[3] // 2)
 
-pm_accel = 35
-pm_friction = .985
+pm_accel = 45
+pm_friction = .85
 pm_max_speed = 600
 
 pm_player_size = 10
@@ -56,7 +56,7 @@ def player_move_update(keys: dict, delta_time: float, state: tuple[list[float], 
     if keys[pygame.K_a]:
         vel[0] -= delta_time * pm_accel * (pm_max_speed - abs(vel[0]))
 
-    vel = [vel[0] * pm_friction, vel[1] * pm_friction]
+    vel = [vel[0] * (1 - (1 - pm_friction) * (delta_time * 100)), vel[1] * (1 - (1 - pm_friction) * (delta_time * 100))]
 
     # test collisions
 
