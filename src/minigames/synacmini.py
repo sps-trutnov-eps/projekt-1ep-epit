@@ -209,9 +209,21 @@ def draw_win_screen():
     window.fill(WHITE)
     font = pygame.font.SysFont(None, 64)
     win_text = font.render("Výhra!", True, BLACK)
-    win_text_rect = win_text.get_rect(center=(screen_width // 2, screen_height // 2))
+    win_text_rect = win_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
     window.blit(win_text, win_text_rect)
+
+    button_x = (screen_width - 200) // 2
+    button_y = (screen_height // 2) + 50
+    button_rect = pygame.Rect(button_x, button_y, 200, 50)
+    pygame.draw.rect(window, GRAY, button_rect)
+
+    button_font = pygame.font.SysFont(None, 36)
+    button_text = button_font.render("Ukončit hru", True, BLACK)
+    button_text_rect = button_text.get_rect(center=button_rect.center)
+    window.blit(button_text, button_text_rect)
     pygame.display.flip()
+
+    return button_rect
 
 # Funkce pro vykreslení počítadla správných odpovědí
 def draw_counter():
@@ -242,9 +254,12 @@ while running:
                             is_correct = (answer == current_question["correct_answer"])
                             draw_feedback_screen(is_correct)
                             question_asked = False
+                elif game_won:
+                    if win_button_rect.collidepoint(event.pos):
+                        running = False
 
     if game_won:
-        draw_win_screen()
+        win_button_rect = draw_win_screen()
     elif not game_ready:
         draw_start_screen()
     elif game_ongoing and not question_asked:
