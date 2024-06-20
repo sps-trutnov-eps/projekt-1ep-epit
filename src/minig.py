@@ -7,6 +7,11 @@ import minigames.podvadeni as mini_podvadeni
 import minigames.invaders as invaders
 import minigames.aim as mini_aim
 import minigames.minihra_klikání as mini_klik
+import minigames.více_koleček as vice
+import minigames.clickni_na_kolečko as kol
+import minigames.multitasking as multi
+import minigames.přepis as prepis
+import minigames.zapamatuj_si_číslo as mem
 
 # tady odkažte svoji minihru s jejím jménem (stejně jako test)
 minigame_lib = {
@@ -16,6 +21,11 @@ minigame_lib = {
     "invaders": invaders.mini_invaders,
     "klikani": mini_klik.mini_klik,
     "aim": mini_aim.mini_aim,
+    "vice": vice.mini_vic_kolecek,
+    "kolecka": kol.mini_kolecko,
+    "multitasking": multi.mini_multi,
+    "prepis": prepis.mini_prepis,
+    "zapamatuj": mem.mini_memory,
 }
 
 def switch_to_minigame(name: str, team, room, land, score: int, screen: pygame.Surface):
