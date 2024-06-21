@@ -487,8 +487,10 @@ def level(screen: pygame.Surface) -> int:
                 room = None # TODO
                 if keys[pygame.K_e]:
                     minig.switch_to_minigame(random.choice(list(minig.minigame_lib.keys())), team, room, screen)
-                    delta_time = 0
-
+                    clock.tick(60) # reset delta_time
+                    clock.tick(60)
+                    continue
+                    
         screen.fill(BLACK)
 
         # map rendering
