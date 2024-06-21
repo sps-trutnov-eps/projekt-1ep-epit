@@ -542,12 +542,9 @@ def server_tickloop():
             elif packet[0] == "ping":
                 send_packet(client_sock, ("pong",*packet))
                 
-            else:
-                send_packet(client_sock, ("s_unexpected_packet",))
-
             # score packets
                 
-            if packet[0] == "score_ep":
+            elif packet[0] == "score_ep":
                 server_state.score["ep"] += packet[1]
 
             elif packet[0] == "score_it":
@@ -560,6 +557,9 @@ def server_tickloop():
 
             elif packet[0] == "land_it":
                 server_state.land["it"].append(packet[1])
+                
+            else:
+                send_packet(client_sock, ("s_unexpected_packet",))
 
         # == process and send game events ==
 
